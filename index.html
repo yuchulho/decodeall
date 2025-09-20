@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,7 +56,11 @@
             Tooltip,
             IconButton,
             Tabs,
-            Tab
+            Tab,
+            FormControl,
+            InputLabel,
+            Select,
+            MenuItem
         } = MaterialUI;
 
         // -------------------------
@@ -534,7 +538,133 @@
             );
         }
 
+        // -------------------------
+        // 다국어 지원 시스템
+        // -------------------------
+        
+        // 언어 감지 및 기본 언어 설정 (localStorage 우선)
+        function detectBrowserLanguage() {
+            // localStorage에서 저장된 언어 설정 확인
+            const savedLanguage = localStorage.getItem('decodeall-language');
+            if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'en')) {
+                return savedLanguage;
+            }
+            
+            // 저장된 설정이 없으면 브라우저 언어 감지
+            const lang = navigator.language || navigator.userLanguage;
+            if (lang.startsWith('ko')) return 'ko';
+            return 'en'; // 기본값은 영어
+        }
+
+        // 번역 데이터
+        const translations = {
+            ko: {
+                // 메인 타이틀
+                title: "자동 인코딩 감지 & 디코더",
+                
+                // 탭 제목
+                tabDecoder: "디코더",
+                tabEncoder: "인코더",
+                
+                // 디코더 섹션
+                inputLabel: "디코딩할 텍스트 입력",
+                inputPlaceholder: "Base64, URL, Hex 등 인코딩된 텍스트를 입력하세요...",
+                outputLabel: "디코딩 결과",
+                encodingTypeLabel: "감지된 인코딩",
+                beautifyLabel: "Beautify",
+                hexViewLabel: "HEX View",
+                imageViewLabel: "이미지 보기",
+                
+                // 인코더 섹션
+                encodeInputLabel: "인코딩할 텍스트 입력",
+                encodeInputPlaceholder: "인코딩할 텍스트를 입력하세요...",
+                encodeResultLabel: "인코딩 결과",
+                algorithmDescription: "알고리즘 설명",
+                
+                // 버튼
+                copyButton: "복사",
+                pasteButton: "붙여넣기",
+                clearButton: "지우기",
+                
+                // 메시지
+                copySuccess: "복사했습니다.",
+                copyError: "복사에 실패했습니다.",
+                pasteSuccess: "붙여넣기 완료",
+                pasteError: "붙여넣기에 실패했습니다.",
+                clearSuccess: "내용을 지웠습니다.",
+                imageSaveSuccess: "이미지를 저장했습니다.",
+                
+                // 기타
+                dragDropHint: "드래그앤드롭한 파일 및 텍스트 모두 동일하게 로컬에서만 처리됩니다.",
+                privacyNote: "입력값은 브라우저에서만 처리되며 저장되지 않습니다.",
+                supportedEncodings: "지원 인코딩",
+                decodeDescription: "아래 입력창에 어떤 인코딩이든 텍스트를 넣거나 파일을 드래그앤드롭하면 자동으로 인코딩을 감지하고 디코딩 결과를 보여줍니다.",
+                cannotDecode: "디코딩할 수 없는 데이터입니다.",
+                noData: "디코딩할 데이터가 없습니다.",
+                
+                // 언어 선택
+                languageLabel: "언어",
+                korean: "한국어",
+                english: "English"
+            },
+            en: {
+                // 메인 타이틀
+                title: "Auto Encoding Detection & Decoder",
+                
+                // 탭 제목
+                tabDecoder: "Decoder",
+                tabEncoder: "Encoder",
+                
+                // 디코더 섹션
+                inputLabel: "Input text to decode",
+                inputPlaceholder: "Enter encoded text like Base64, URL, Hex...",
+                outputLabel: "Decoding result",
+                encodingTypeLabel: "Detected encoding",
+                beautifyLabel: "Beautify",
+                hexViewLabel: "HEX View",
+                imageViewLabel: "Image View",
+                
+                // 인코더 섹션
+                encodeInputLabel: "Input text to encode",
+                encodeInputPlaceholder: "Enter text to encode...",
+                encodeResultLabel: "Encoding result",
+                algorithmDescription: "Algorithm description",
+                
+                // 버튼
+                copyButton: "Copy",
+                pasteButton: "Paste",
+                clearButton: "Clear",
+                
+                // 메시지
+                copySuccess: "Copied to clipboard.",
+                copyError: "Failed to copy.",
+                pasteSuccess: "Paste completed",
+                pasteError: "Failed to paste.",
+                clearSuccess: "Content cleared.",
+                imageSaveSuccess: "Image saved successfully.",
+                
+                // 기타
+                dragDropHint: "Drag and drop files are also processed locally only.",
+                privacyNote: "Input is processed only in browser and not stored.",
+                supportedEncodings: "Supported Encodings",
+                decodeDescription: "Enter any encoded text or drag and drop files into the input field below, and it will automatically detect the encoding and show the decoding result.",
+                cannotDecode: "Cannot decode the data.",
+                noData: "No data to decode.",
+                
+                // 언어 선택
+                languageLabel: "Language",
+                korean: "한국어",
+                english: "English"
+            }
+        };
+
         function EncoderDecoderTabs() {
+            // 언어 상태 (브라우저 언어 자동 감지)
+            const [language, setLanguage] = useState(detectBrowserLanguage());
+            
+            // 번역 함수
+            const t = (key) => translations[language][key] || key;
+            
             const [tab, setTab] = useState(0);
 
             // 드래그오버 상태 추가
@@ -581,6 +711,13 @@
                 });
             }, []);
 
+            // 언어 변경 시 HTML lang 속성 업데이트 및 localStorage 저장
+            useEffect(() => {
+                document.documentElement.lang = language;
+                // 언어 설정을 localStorage에 저장
+                localStorage.setItem('decodeall-language', language);
+            }, [language]);
+
             // 디코딩 입력 변화
             useEffect(() => {
                 if (input.length === 0) {
@@ -610,7 +747,7 @@
                 if (cannotDecode) {
                     setOutput('');
                     setEncoding('');
-                    setError('디코딩할 수 없는 데이터입니다.');
+                    setError(t('cannotDecode'));
                     setBeautified('');
                     setSyntaxType('');
                     setSyntaxError(null);
@@ -688,7 +825,40 @@
                 React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
                     React.createElement(Grid, { item: true, xs: 12, md: 8 },
                         React.createElement(Paper, { elevation: 3, style: { padding: '28px 20px' }, ref: paperRef },
-                            React.createElement(Typography, { variant: "h4", component: "h1", gutterBottom: true, align: "center" }, "자동 인코딩 감지 & 디코더"),
+                            // 언어 선택 UI (상단 우측)
+                            React.createElement(Box, { sx: { display: 'flex', justifyContent: 'flex-end', mb: 2 } },
+                                React.createElement(MaterialUI.FormControl, { sx: { minWidth: 100 } },
+                                    React.createElement(MaterialUI.Select, {
+                                        value: language,
+                                        onChange: (event) => setLanguage(event.target.value),
+                                        size: "small",
+                                        variant: "standard",
+                                        sx: { fontSize: '0.875rem' }
+                                    },
+                                        React.createElement(MaterialUI.MenuItem, { value: "ko", sx: { fontSize: '0.875rem' } }, 
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 0.5 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/kr.png',
+                                                    alt: '한국',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('korean'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "en", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 0.5 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/us.png',
+                                                    alt: '미국',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('english'))
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement(Typography, { variant: "h4", component: "h1", gutterBottom: true, align: "center" }, t('title')),
                             // 상단 보안/프라이버시 안내 강조 배너
                             React.createElement(MaterialUI.Alert, {
                                 severity: "info",
@@ -706,8 +876,8 @@
                                 icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "shield")
                             },
                                 React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
-                                    React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, "입력값은 브라우저에서만 처리되며 서버로 전송·저장되지 않습니다."),
-                                    React.createElement(Typography, { variant: "caption" }, "드래그앤드롭한 파일 및 텍스트 모두 동일하게 로컬에서만 처리됩니다.")
+                                    React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('privacyNote')),
+                                    React.createElement(Typography, { variant: "caption" }, t('dragDropHint'))
                                 )
                             ),
                             // 지원 인코딩 목록: 선택 UI 느낌을 제거한 배지(pill) 스타일
@@ -718,7 +888,7 @@
                                         bgcolor: '#e3f2fd', color: '#1976d2',
                                         fontSize: 12, fontWeight: 600
                                     }
-                                }, "지원 인코딩"),
+                                }, t('supportedEncodings')),
                                 [
                                     "CBOR",
                                     "Base64",
@@ -752,14 +922,14 @@
                                 centered: true,
                                 sx: { mb: 2 }
                             },
-                                React.createElement(Tab, { label: "디코딩" }),
-                                React.createElement(Tab, { label: "인코딩" })
+                                React.createElement(Tab, { label: t('tabDecoder') }),
+                                React.createElement(Tab, { label: t('tabEncoder') })
                             ),
 
                             // ----------------- 디코딩 탭 -----------------
                             tab === 0 && React.createElement(Box, null,
                                 React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
-                                    "아래 입력창에 어떤 인코딩이든 텍스트를 넣거나 파일을 드래그앤드롭하면 자동으로 인코딩을 감지하고 디코딩 결과를 보여줍니다."
+                                    t('decodeDescription')
                                 ),
                                 // 입력 초기화 버튼
                                 React.createElement(Box, { sx: { textAlign: 'right', mb: 1 } },
@@ -791,7 +961,7 @@
                                         rows: 12,
                                         value: input,
                                         onChange: e => setInput(e.target.value),
-                                        placeholder: "여기에 값을 입력하거나 파일을 드래그 앤 드롭하세요.",
+                                        placeholder: t('inputPlaceholder'),
                                         InputLabelProps: { shrink: true },
                                         inputRef: inputRef,
                                         inputProps: {
@@ -880,21 +1050,21 @@
                                                         } else {
                                                             await navigator.clipboard.writeText(output);
                                                         }
-                                                        showToast('복사했습니다.', 'success');
+                                                        showToast(t('copySuccess'), 'success');
                                                     } catch {
-                                                        showToast('복사에 실패했습니다.', 'error');
+                                                        showToast(t('copyError'), 'error');
                                                     }
                                                 },
                                                 sx: { verticalAlign: 'middle' },
                                                 disabled: !output
                                             },
-                                            "복사"
+                                            t('copyButton')
                                         )
                                     )
                                 ),
                                 // 디코딩 결과 (원본)
                                 React.createElement(Box, { sx: { position: 'relative' } },
-                                    error === '디코딩할 수 없는 데이터입니다.' ? (
+                                    error === t('cannotDecode') ? (
                                         React.createElement('div', {
                                             style: {
                                                 minHeight: 220,
@@ -913,7 +1083,7 @@
                                                 border: '1.5px solid #ffc107'
                                             }
                                         },
-                                            React.createElement('div', null, "디코딩할 수 없는 데이터입니다."),
+                                            React.createElement('div', null, t('cannotDecode')),
                                             encoding && React.createElement('div', {
                                                 style: {
                                                     marginTop: 18,
@@ -944,7 +1114,7 @@
                                                 }
                                             }, toHexView(output))
                                             : React.createElement(TextField, {
-                                                label: "디코딩 결과 (원본)",
+                                                label: t('outputLabel'),
                                                 variant: "outlined",
                                                 fullWidth: true,
                                                 multiline: true,
@@ -1015,7 +1185,7 @@
                                                             document.body.removeChild(a);
 
                                                             // 저장 완료 토스트
-                                                            showToast('이미지를 저장했습니다.', 'success');
+                                                            showToast(t('imageSaveSuccess'), 'success');
                                                         },
                                                         sx: { mt: 1 }
                                                     },
@@ -1066,7 +1236,7 @@
                                         rows: 12,
                                         value: encodeInput,
                                         onChange: e => setEncodeInput(e.target.value),
-                                        placeholder: "여기에 값을 입력하거나 파일을 드래그 앤 드롭하세요. 선택한 방식으로 인코딩됩니다.",
+                                        placeholder: t('encodeInputPlaceholder'),
                                         InputLabelProps: { shrink: true },
                                         inputRef: encodeInputRef,
                                         inputProps: {
@@ -1177,7 +1347,7 @@
                                     icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "info")
                                 },
                                     React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
-                                        React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, "알고리즘 설명"),
+                                        React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('algorithmDescription')),
                                         React.createElement(Typography, { variant: "caption" }, Codecs.getDescriptionByLabel(encodeType))
                                     )
                                 ),
@@ -1198,20 +1368,20 @@
                                                     if (!encodeResult) return;
                                                     try {
                                                         await navigator.clipboard.writeText(encodeResult);
-                                                        showToast('복사했습니다.', 'success');
+                                                        showToast(t('copySuccess'), 'success');
                                                     } catch {
-                                                        showToast('복사에 실패했습니다.', 'error');
+                                                        showToast(t('copyError'), 'error');
                                                     }
                                                 },
                                                 sx: { verticalAlign: 'middle' },
                                                 disabled: !encodeResult
                                             },
-                                            "복사"
+                                            t('copyButton')
                                         )
                                     )
                                 ),
                                 React.createElement(TextField, {
-                                    label: "인코딩 결과",
+                                    label: t('encodeResultLabel'),
                                     variant: "outlined",
                                     fullWidth: true,
                                     multiline: true,
@@ -1221,9 +1391,7 @@
                                     style: { marginBottom: '20px', background: "#fafdff" },
                                     InputProps: { readOnly: true }
                                 }),
-                                React.createElement(Typography, { variant: "caption", color: "textSecondary", align: "center", display: "block" },
-                                    "입력값은 브라우저에서만 처리되며 저장되지 않습니다."
-                                )
+                                
                             ),
                             // 전역 Snackbar
                             React.createElement(
