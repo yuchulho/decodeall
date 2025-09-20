@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자동 인코딩 감지 & 디코더</title>
+    <!-- Material UI CDN -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            min-height: 100vh;
+        }
+        #root {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .json-key { color: #ffb300; }
+        .json-string { color: #43a047; }
+        .json-number { color: #29b6f6; }
+        .json-boolean { color: #f06292; }
+        .json-null { color: #bdbdbd; }
+        .xml-tag { color: #64b5f6; }
+        .xml-attr { color: #ffd54f; }
+        .xml-attr-value { color: #81c784; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Material UI -->
+    <script src="https://unpkg.com/@mui/material@5.15.15/umd/material-ui.development.js"></script>
+    <!-- GSAP CDN -->
+    <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+    <!-- iconv-lite for charset decoding (browserified) -->
+    <script src="https://cdn.jsdelivr.net/npm/iconv-lite@0.6.3/dist/iconv-lite.min.js"></script>
+    <!-- CBOR decoder/encoder (cborg) -->
+    <script src="https://unpkg.com/cborg@1.10.2/dist/cborg.js"></script>
+    <script>
+        const { useState, useEffect, useRef } = React;
+        const {
+            Box,
+            Typography,
+            TextField,
+            Paper,
+            Grid,
+            Divider,
+            Chip,
+            Tooltip,
+            IconButton,
+            Tabs,
+            Tab
+        } = MaterialUI;
+
+        // -------------------------
+        // Utils (중복 제거 공통 함수)
+        // -------------------------
+        function bytesLen(str) {
+            try { return new TextEncoder().encode(str || '').length; } catch { return (str || '').length; }
+        }
+        function isBinaryString(str, threshold = 0.2) {
+            if (!str) return false;
+            let nonPrintable = 0;
+            for (let i = 0; i < str.length; ++i) {
+                const code = str.charCodeAt(i);
+                if ((code < 0x09 || (code > 0x0D && code < 0x20) || code === 0x7F)) nonPrintable++;
+            }
+            return (nonPrintable / str.length) > threshold;
+        }
+        function toHexView(binaryStr) {
+            const bytes = binaryStr ? Array.from(binaryStr).map(c => c.charCodeAt(0)) : [];
+            let lines = [];
+            for (let i = 0; i < bytes.length; i += 16) {
+                let hex = bytes.slice(i, i + 16).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                let ascii = bytes.slice(i, i + 16).map(b => (b >= 32 && b <= 126 ? String.fromCharCode(b) : '.')).join('');
+                lines.push(hex.padEnd(16 * 3) + '  ' + ascii);
+            }
+            return lines.join('\n');
+        }
+        async function handleFileDrop(e, setValue) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                if (file.type.startsWith('text/')) {
+                    const text = await file.text();
+                    setValue(text);
+                } else {
+                    // 바이너리 파일: 바이너리 문자열 로딩
+                    const arrayBuffer = await file.arrayBuffer();
+                    const bytes = new Uint8Array(arrayBuffer);
+                    let binaryString = '';
+                    for (let i = 0; i < bytes.length; ++i) {
+                        binaryString += String.fromCharCode(bytes[i]);
+                    }
+                    setValue(binaryString);
+                }
+            }
+        }
+        // 이미지 판별 및 Data URL 생성
+        function sniffImage(binaryStr) {
+            if (!binaryStr) return null;
+            if (binaryStr.startsWith('\x89PNG\r\n\x1a\n')) return { mime: 'image/png', ext: 'png' };
+            if (binaryStr.startsWith('\xFF\xD8')) return { mime: 'image/jpeg', ext: 'jpg' };
+            if (binaryStr.startsWith('GIF87a') || binaryStr.startsWith('GIF89a')) return { mime: 'image/gif', ext: 'gif' };
+            if (binaryStr.startsWith('BM')) return { mime: 'image/bmp', ext: 'bmp' };
+            if (binaryStr.trim().startsWith('<svg')) return { mime: 'image/svg+xml', ext: 'svg' };
+            return null;
+        }
+
+        // Beautify & syntax highlight helpers (JSON/XML)
+        function formatXml(xml) {
+            let formatted = '';
+            const reg = /(>)(<)(\/*)/g;
+            xml = xml.replace(reg, '$1\r\n$2$3');
+            let pad = 0;
+            xml.split('\r\n').forEach((node) => {
+                let indent = 0;
+                if (node.match(/.+<\/\w[^>]*>$/)) {
+                    indent = 0;
+                } else if (node.match(/^<\/\w/)) {
+                    if (pad !== 0) pad -= 1;
+                } else if (node.match(/^<\w([^>]*[^/])?>.*$/)) {
+                    indent = 1;
+                } else {
+                    indent = 0;
+                }
+                formatted += '  '.repeat(pad) + node + '\r\n';
+                pad += indent;
+            });
+            return formatted.trim();
+        }
+        function validateXml(xmlStr) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(xmlStr, "application/xml");
+                const parsererror = doc.getElementsByTagName("parsererror");
+                if (parsererror.length > 0) {
+                    const msg = parsererror[0].textContent;
+                    const match = msg.match(/at line (\d+)/i);
+                    return {
+                        valid: false,
+                        error: msg,
+                        errorLine: match ? parseInt(match[1], 10) : null
+                    };
+                }
+                return { valid: true };
+            } catch (e) {
+                return { valid: false, error: e.message, errorLine: null };
+            }
+        }
+        function syntaxHighlightJson(json) {
+            if (typeof json != 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            json = json
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+        function syntaxHighlightXml(xml) {
+            xml = xml
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            xml = xml.replace(/(&lt;\/?)([\w\-\.]+)(.*?)(\/?&gt;)/g, function (match, p1, p2, p3, p4) {
+                return p1 + '<span class="xml-tag">' + p2 + '</span>' + p3 + p4;
+            });
+            xml = xml.replace(/([\w\-\.]+)="([^"]*)"/g, function (match, p1, p2) {
+                return '<span class="xml-attr">' + p1 + '</span>="<span class="xml-attr-value">' + p2 + '</span>"';
+            });
+            return xml;
+        }
+
+        // -------------------------
+        // Codec 전략 (객체지향 구조)
+        // -------------------------
+        const Codecs = (() => {
+            // 공통 finalize
+            function finalize(decoded, encoding, input) {
+                const res = { decoded, encoding, error: null, isBinary: false, matched: true };
+                res.isBinary = isBinaryString(res.decoded, 0.2);
+                // 디코딩 불가 케이스(텍스트성 인코딩으로 판단되었지만 의미 없는 결과)
+                if (
+                    input &&
+                    res.isBinary &&
+                    (encoding === 'Plain Text' || encoding === 'Quoted-Printable' || encoding === 'HTML Entities' || encoding === 'Unicode Escape')
+                ) {
+                    return { decoded: '', encoding: '', error: '디코딩할 수 없는 데이터입니다.', isBinary: false, matched: true };
+                }
+                return res;
+            }
+
+            // CBOR codec
+            const CBOR = {
+                id: 'cbor',
+                label: 'CBOR',
+                description: "CBOR(Concise Binary Object Representation)은 JSON과 유사한 이진 직렬화 포맷입니다. 바이너리·Base64로 전달된 데이터를 구조화된 값으로 복원합니다.",
+                detect(input) {
+                    try {
+                        if (typeof cborg === 'undefined') return { matched: false };
+                        const s = input || '';
+                        if (!s) return { matched: false };
+
+                        // 시도 조건: 명백한 Base64이거나, 바이너리스러운 문자열일 때만
+                        const looksBase64 = /^[A-Za-z0-9+/=\s]+$/.test(s) && s.replace(/\s/g, '').length % 4 === 0 && s.replace(/\s/g, '').length >= 8;
+                        const looksBinary = isBinaryString(s, 0.05);
+
+                        if (!looksBase64 && !looksBinary) return { matched: false };
+
+                        // 바이트 준비
+                        let bytes;
+                        if (looksBase64) {
+                            try {
+                                bytes = base64ToUint8(s);
+                            } catch {
+                                return { matched: false };
+                            }
+                        } else {
+                            bytes = binStringToUint8(s);
+                        }
+
+                        // 디코드 시도
+                        const value = cborg.decode(bytes);
+
+                        // 결과를 문자열로 변환
+                        let out;
+                        if (typeof value === 'string') {
+                            out = value;
+                        } else if (value instanceof Uint8Array) {
+                            // 원시 바이트: 바이너리 문자열로 전달하여 HEX 뷰 제공
+                            out = uint8ToBinString(value);
+                        } else {
+                            try {
+                                out = JSON.stringify(value);
+                            } catch {
+                                out = String(value);
+                            }
+                        }
+                        return finalize(out, this.label, input);
+                    } catch {
+                        return { matched: false };
+                    }
+                },
+                encode(input) {
+                    // 텍스트를 CBOR로 인코딩한 뒤 Base64로 반환
+                    try {
+                        if (typeof cborg === 'undefined') return '';
+                        const bytes = cborg.encode(input); // Uint8Array
+                        const bin = uint8ToBinString(bytes);
+                        return btoa(bin);
+                    } catch {
+                        return '';
+                    }
+                }
+            };
+
+            const Hex = {
+                id: 'hex',
+                label: 'Hex',
+                description: "Hex(16진수) 인코딩은 각 바이트를 두 자리 16진수 문자열로 변환합니다. 예: 0x41 → '41'",
+                detect(input) {
+                    try {
+                        const compact = (input || '').replace(/\s/g, '');
+                        if (/^(0x)?([0-9a-fA-F]{2})+$/.test(compact)) {
+                            const hex = compact.replace(/^0x/, '');
+                            let str = '';
+                            for (let i = 0; i < hex.length; i += 2) {
+                                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+                            }
+                            return finalize(str, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    return Array.from(input).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                }
+            };
+
+            const Base64 = {
+                id: 'base64',
+                label: 'Base64',
+                description: "Base64는 바이너리 데이터를 텍스트로 안전하게 변환하는 인코딩 방식입니다. 이메일 첨부, 이미지 데이터 등에서 널리 사용됩니다.",
+                detect(input) {
+                    try {
+                        if (
+                            /^[A-Za-z0-9+/=\s]+$/.test(input || '') &&
+                            (input || '').length >= 8 &&
+                            (input || '').replace(/\s/g, '').length % 4 === 0
+                        ) {
+                            const b64 = atob((input || '').replace(/\s/g, ''));
+                            return finalize(b64, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    try { return btoa(input); }
+                    catch { return btoa(unescape(encodeURIComponent(input))); }
+                }
+            };
+
+            const Base64URL = {
+                id: 'base64url',
+                label: 'Base64URL',
+                description: "Base64URL은 '+','/'를 '-','_'로 바꾸고 '=' 패딩을 제거한 변형입니다. JWT 등에서 사용.",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        if (/^[A-Za-z0-9_\-=]+$/.test(s) && s.length >= 8 && (s.includes('-') || s.includes('_'))) {
+                            let b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+                            while (b64.length % 4 !== 0) b64 += '=';
+                            const out = atob(b64);
+                            return finalize(out, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    try {
+                        let b64 = btoa(input);
+                        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    } catch {
+                        let b64 = btoa(unescape(encodeURIComponent(input)));
+                        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    }
+                }
+            };
+
+            const UrlEncoding = {
+                id: 'url',
+                label: 'URL Encoding',
+                description: "URL Encoding은 안전하지 않은 문자를 %XX로 변환합니다. 예: 공백 → %20",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        if (/%[0-9A-Fa-f]{2}/.test(s)) {
+                            const out = decodeURIComponent(s);
+                            return finalize(out, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    return encodeURIComponent(input);
+                }
+            };
+
+            const HtmlEntities = {
+                id: 'html',
+                label: 'HTML Entities',
+                description: "HTML Entities는 특수문자를 &#코드; 또는 &이름; 형태로 변환합니다. 예: < → &lt;",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        if (/&[a-zA-Z]+;/.test(s)) {
+                            const txt = document.createElement('textarea');
+                            txt.innerHTML = s;
+                            return finalize(txt.value, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    return input.replace(/[\u00A0-\u9999<>&"']/gim, i => '&#' + i.charCodeAt(0) + ';');
+                }
+            };
+
+            const UnicodeEsc = {
+                id: 'unicode',
+                label: 'Unicode Escape (\\uXXXX)',
+                description: "유니코드 이스케이프는 각 문자를 \\uXXXX로 변환합니다. 예: 가 → \\uAC00",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        if (/\\u[0-9a-fA-F]{4}/.test(s)) {
+                            const out = s.replace(/\\u([0-9a-fA-F]{4})/g, (m, g1) => String.fromCharCode(parseInt(g1, 16)));
+                            return finalize(out, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    return input.replace(/[\s\S]/g, c => '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4));
+                }
+            };
+
+            const QuotedPrintable = {
+                id: 'qp',
+                label: 'Quoted-Printable',
+                description: "Quoted-Printable은 8비트를 7비트 전송에 맞추는 인코딩입니다. 예: =0D=0A",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        const matches = s.match(/=([0-9A-Fa-f]{2})/g);
+                        if (matches && matches.length > 0 && matches.length * 3 > s.length * 0.3) {
+                            let out = s.replace(/=(\r?\n|\r)/g, '').replace(/=([0-9A-Fa-f]{2})/g, (m, g1) =>
+                                String.fromCharCode(parseInt(g1, 16))
+                            );
+                            return finalize(out, this.label, input);
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    return input.replace(/[\x00-\x1F\x7F-\xFF=]/g, c => '=' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
+                }
+            };
+
+            const Binary = {
+                id: 'bin',
+                label: 'Binary',
+                description: "바이너리(비가시 제어문자 포함) 데이터입니다.",
+                detect(input) {
+                    const s = input || '';
+                    // 민감도 높임: 5%
+                    if (isBinaryString(s, 0.05)) {
+                        return { decoded: s, encoding: this.label, error: null, isBinary: true, matched: true };
+                    }
+                    return { matched: false };
+                }
+                // encode 없음 (노출 X)
+            };
+
+            const registry = [
+                // CBOR을 먼저 시도해 Base64로 포장된 CBOR까지 처리
+                CBOR,
+                Hex,
+                Base64,
+                Base64URL,
+                Binary,
+                UrlEncoding,
+                HtmlEntities,
+                UnicodeEsc,
+                QuotedPrintable
+            ];
+
+            function detect(input) {
+                for (const codec of registry) {
+                    const r = codec.detect && codec.detect(input);
+                    if (r && r.matched) return r;
+                }
+                // Fallback
+                return finalize(input, 'Plain Text', input);
+            }
+
+            function getEncoderLabels() {
+                return registry.filter(c => typeof c.encode === 'function').map(c => c.label);
+            }
+            function getEncoderByLabel(label) {
+                return registry.find(c => c.label === label && typeof c.encode === 'function');
+            }
+            function getDescriptionByLabel(label) {
+                const c = registry.find(c => c.label === label);
+                return (c && c.description) || '';
+            }
+
+            return { detect, getEncoderLabels, getEncoderByLabel, getDescriptionByLabel };
+        })();
+        // -------------------------
+
+        // 디코딩 감지 함수 (리팩토링: 전략 사용)
+        function detectAndDecode(input) {
+            return Codecs.detect(input);
+        }
+
+        // 인코딩 함수 (리팩토링: 전략 사용)
+        function encodeText(input, encodingLabel) {
+            const encoder = Codecs.getEncoderByLabel(encodingLabel) || Codecs.getEncoderByLabel('Base64');
+            try {
+                return encoder ? encoder.encode(input) : input;
+            } catch {
+                return '';
+            }
+        }
+
+        function renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine) {
+            if (!beautified) return null;
+            const lines = beautified.split('\n');
+            return (
+                React.createElement('pre', {
+                    style: {
+                        background: '#23272e',
+                        color: '#fff',
+                        borderRadius: 6,
+                        padding: 16,
+                        fontSize: 15,
+                        overflowX: 'auto',
+                        marginBottom: 0,
+                        marginTop: 0
+                    }
+                },
+                    lines.map((line, idx) => {
+                        let style = {};
+                        if (syntaxErrorLine && idx + 1 === syntaxErrorLine) {
+                            style = { background: '#ffebee', color: '#c62828' };
+                        }
+                        let html = line;
+                        if (syntaxType === 'json') {
+                            html = syntaxHighlightJson(line);
+                        } else if (syntaxType === 'xml') {
+                            html = syntaxHighlightXml(line);
+                        }
+                        return React.createElement('div', {
+                            key: idx,
+                            style: { ...style, whiteSpace: 'pre' },
+                            dangerouslySetInnerHTML: { __html: html }
+                        });
+                    })
+                )
+            );
+        }
+
+        function EncoderDecoderTabs() {
+            const [tab, setTab] = useState(0);
+
+            // 드래그오버 상태 추가
+            const [isDragOverInput, setIsDragOverInput] = useState(false);
+            const [isDragOverEncode, setIsDragOverEncode] = useState(false);
+
+            // 디코딩 상태
+            const [input, setInput] = useState('');
+            const [output, setOutput] = useState('');
+            const [encoding, setEncoding] = useState('');
+            const [error, setError] = useState(null);
+            const [beautified, setBeautified] = useState('');
+            const [syntaxType, setSyntaxType] = useState('');
+            const [syntaxError, setSyntaxError] = useState(null);
+            const [syntaxErrorLine, setSyntaxErrorLine] = useState(null);
+
+            // 인코딩 상태
+            const [encodeInput, setEncodeInput] = useState('');
+            const [encodeType, setEncodeType] = useState('Base64');
+            const [encodeResult, setEncodeResult] = useState('');
+
+            // 바이너리 여부 상태
+            const [isBinaryOutput, setIsBinaryOutput] = useState(false);
+
+            const inputRef = useRef(null);
+            const outputRef = useRef(null);
+            const encodeInputRef = useRef(null);
+            const paperRef = useRef(null);
+
+            // Snackbar(토스트) 상태
+            const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+            const showToast = (message, severity = 'success') => setToast({ open: true, message, severity });
+            const handleToastClose = (event, reason) => {
+                if (reason === 'clickaway') return;
+                setToast(prev => ({ ...prev, open: false }));
+            };
+
+            useEffect(() => {
+                gsap.from(paperRef.current, {
+                    y: 60,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out"
+                });
+            }, []);
+
+            // 디코딩 입력 변화
+            useEffect(() => {
+                if (input.length === 0) {
+                    setOutput('');
+                    setEncoding('');
+                    setError(null);
+                    setBeautified('');
+                    setSyntaxType('');
+                    setSyntaxError(null);
+                    setSyntaxErrorLine(null);
+                    return;
+                }
+                const result = detectAndDecode(input);
+
+                // 디코딩 불가: 디코딩 결과가 없고, 인코딩이 의미 없는 값일 때만!
+                const cannotDecode =
+                    (
+                        (!result.decoded) &&
+                        (
+                            result.encoding === 'Plain Text' ||
+                            result.encoding === 'Quoted-Printable' ||
+                            result.encoding === 'HTML Entities' ||
+                            result.encoding === 'Unicode Escape'
+                        )
+                    );
+
+                if (cannotDecode) {
+                    setOutput('');
+                    setEncoding('');
+                    setError('디코딩할 수 없는 데이터입니다.');
+                    setBeautified('');
+                    setSyntaxType('');
+                    setSyntaxError(null);
+                    setSyntaxErrorLine(null);
+                    setIsBinaryOutput(false);
+                    return;
+                }
+
+                setOutput(result.decoded);
+                setEncoding(result.encoding);
+                setError(result.error);
+
+                // 바이너리 여부 저장
+                setIsBinaryOutput(result.isBinary || false);
+
+                // Beautify & syntax check for JSON/XML
+                let beautified = '';
+                let syntaxType = '';
+                let syntaxError = null;
+                let syntaxErrorLine = null;
+
+                // JSON
+                try {
+                    if (/^\s*[\{\[]/.test(result.decoded)) {
+                        const parsed = JSON.parse(result.decoded);
+                        beautified = JSON.stringify(parsed, null, 2);
+                        syntaxType = 'json';
+                        syntaxError = null;
+                        syntaxErrorLine = null;
+                    }
+                } catch (e) {
+                    syntaxType = 'json';
+                    syntaxError = e.message;
+                    const match = e.message.match(/at position (\d+)/);
+                    if (match) {
+                        const pos = parseInt(match[1], 10);
+                        const lines = result.decoded.slice(0, pos).split('\n');
+                        syntaxErrorLine = lines.length;
+                    }
+                    // 오류가 있어도 beautify 시도
+                    try {
+                        beautified = JSON.stringify(JSON.parse(result.decoded.replace(/[\r\n]/g, '')), null, 2);
+                    } catch {}
+                }
+                // XML
+                if (!beautified && /<[\w\s="'\/\-\.:]+>/.test(result.decoded)) {
+                    const formatted = formatXml(result.decoded);
+                    beautified = formatted;
+                    syntaxType = 'xml';
+                    const xmlCheck = validateXml(result.decoded);
+                    if (!xmlCheck.valid) {
+                        syntaxError = xmlCheck.error;
+                        syntaxErrorLine = xmlCheck.errorLine;
+                    }
+                }
+                setBeautified(beautified);
+                setSyntaxType(syntaxType);
+                setSyntaxError(syntaxError);
+                setSyntaxErrorLine(syntaxErrorLine);
+            }, [input]);
+
+            // 인코딩 입력 변화
+            useEffect(() => {
+                if (!encodeInput) {
+                    setEncodeResult('');
+                    return;
+                }
+                setEncodeResult(encodeText(encodeInput, encodeType));
+            }, [encodeInput, encodeType]);
+
+            // Chip 목록(선택 UI 완화)은 레지스트리에서 가져오기
+            const encoderLabels = Codecs.getEncoderLabels();
+
+            return (
+                React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
+                    React.createElement(Grid, { item: true, xs: 12, md: 8 },
+                        React.createElement(Paper, { elevation: 3, style: { padding: '28px 20px' }, ref: paperRef },
+                            React.createElement(Typography, { variant: "h4", component: "h1", gutterBottom: true, align: "center" }, "자동 인코딩 감지 & 디코더"),
+                            // 상단 보안/프라이버시 안내 강조 배너
+                            React.createElement(MaterialUI.Alert, {
+                                severity: "info",
+                                variant: "outlined",
+                                sx: {
+                                    mb: 2,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    borderWidth: 1.5,
+                                    borderColor: '#1976d2',
+                                    color: '#1976d2',
+                                    backgroundColor: 'transparent',
+                                    borderRadius: 2
+                                },
+                                icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "shield")
+                            },
+                                React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
+                                    React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, "입력값은 브라우저에서만 처리되며 서버로 전송·저장되지 않습니다."),
+                                    React.createElement(Typography, { variant: "caption" }, "드래그앤드롭한 파일 및 텍스트 모두 동일하게 로컬에서만 처리됩니다.")
+                                )
+                            ),
+                            // 지원 인코딩 목록: 선택 UI 느낌을 제거한 배지(pill) 스타일
+                            React.createElement(Box, { sx: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', mb: 2, gap: 1 } },
+                                React.createElement(Box, {
+                                    sx: {
+                                        px: 1.25, py: 0.5, borderRadius: 9999,
+                                        bgcolor: '#e3f2fd', color: '#1976d2',
+                                        fontSize: 12, fontWeight: 600
+                                    }
+                                }, "지원 인코딩"),
+                                [
+                                    "CBOR",
+                                    "Base64",
+                                    "Base64URL",
+                                    "URL Encoding",
+                                    "Hex",
+                                    "HTML Entities",
+                                    "Unicode Escape (\\uXXXX)",
+                                    "Quoted-Printable",
+                                    "UTF-8 (bytes)",
+                                    "EUC-KR (bytes)",
+                                    "Plain Text"
+                                ].map(label =>
+                                    React.createElement(Box, {
+                                        key: label,
+                                        sx: {
+                                            px: 1.25, py: 0.5, borderRadius: 9999,
+                                            bgcolor: '#f5f7fa', color: 'text.secondary',
+                                            border: '1px solid #e0e0e0',
+                                            fontSize: 12,
+                                            cursor: 'default',
+                                            pointerEvents: 'none'
+                                        }
+                                    }, label)
+                                )
+                            ),
+                            React.createElement(Divider, { style: { margin: '10px 0 18px 0' } }),
+                            React.createElement(Tabs, {
+                                value: tab,
+                                onChange: (e, v) => setTab(v),
+                                centered: true,
+                                sx: { mb: 2 }
+                            },
+                                React.createElement(Tab, { label: "디코딩" }),
+                                React.createElement(Tab, { label: "인코딩" })
+                            ),
+
+                            // ----------------- 디코딩 탭 -----------------
+                            tab === 0 && React.createElement(Box, null,
+                                React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
+                                    "아래 입력창에 어떤 인코딩이든 텍스트를 넣거나 파일을 드래그앤드롭하면 자동으로 인코딩을 감지하고 디코딩 결과를 보여줍니다."
+                                ),
+                                // 입력 초기화 버튼
+                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1 } },
+                                    React.createElement(
+                                        MaterialUI.Button,
+                                        {
+                                            variant: "outlined",
+                                            color: "secondary",
+                                            size: "small",
+                                            startIcon: React.createElement("span", { className: "material-icons" }, "clear"),
+                                            onClick: () => setInput(''),
+                                            disabled: !input
+                                        },
+                                        "입력 초기화"
+                                    )
+                                ),
+                                // 1. 디코딩 입력 (드래그앤드롭 지원 + 드래그오버 UI)
+                                React.createElement(Box, {
+                                    sx: { position: 'relative', mb: 3, borderRadius: 2 },
+                                    onDrop: (e) => handleFileDrop(e, setInput).finally(() => setIsDragOverInput(false)),
+                                    onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(true); },
+                                    onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(false); }
+                                },
+                                    React.createElement(TextField, {
+                                        label: "인코딩된 텍스트 입력 (Base64, URL, Hex, HTML Entity, Unicode, Quoted-Printable 등)",
+                                        variant: "outlined",
+                                        fullWidth: true,
+                                        multiline: true,
+                                        rows: 12,
+                                        value: input,
+                                        onChange: e => setInput(e.target.value),
+                                        placeholder: "여기에 값을 입력하거나 파일을 드래그 앤 드롭하세요.",
+                                        InputLabelProps: { shrink: true },
+                                        inputRef: inputRef,
+                                        inputProps: {
+                                            onDrop: (e) => handleFileDrop(e, setInput).finally(() => setIsDragOverInput(false)),
+                                            onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(true); },
+                                            onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(false); }
+                                        },
+                                        sx: {
+                                            marginBottom: '20px',
+                                            background: isDragOverInput ? "#e3f2fd" : "#fafdff",
+                                            borderRadius: 2,
+                                            transition: "background 0.2s"
+                                        }
+                                    }),
+                                    isDragOverInput && React.createElement('div', {
+                                        style: {
+                                            pointerEvents: 'none',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: 8,
+                                            border: '2.5px dashed #1976d2',
+                                            background: 'rgba(25, 118, 210, 0.10)',
+                                            zIndex: 10,
+                                            transition: "border 0.2s, background 0.2s",
+                                            boxSizing: 'border-box'
+                                        }
+                                    },
+                                        React.createElement('div', {
+                                            style: {
+                                                color: '#1976d2',
+                                                fontWeight: 600,
+                                                fontSize: 20,
+                                                background: 'rgba(255,255,255,0.85)',
+                                                borderRadius: 6,
+                                                padding: '18px 36px',
+                                                boxShadow: '0 2px 12px 0 rgba(25,118,210,0.08)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 10
+                                            }
+                                        },
+                                            React.createElement("span", { className: "material-icons", style: { fontSize: 28, marginRight: 8 } }, "file_upload"),
+                                            "여기에 파일을 드롭하면 내용이 입력됩니다"
+                                        )
+                                    ),
+                                    React.createElement('span', {
+                                        style: {
+                                            position: 'absolute',
+                                            right: 16,
+                                            bottom: 10,
+                                            fontSize: 13,
+                                            color: '#888',
+                                            background: '#fafdff',
+                                            padding: '0 6px'
+                                        }
+                                    }, `${bytesLen(input)} bytes`)
+                                ),
+                                React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                    encoding && React.createElement(Chip, {
+                                        label: `감지된 인코딩: ${encoding}`,
+                                        color: encoding === 'Plain Text' ? 'default' : 'primary',
+                                        variant: "outlined",
+                                        sx: { mr: 1 }
+                                    }),
+                                    React.createElement(
+                                        Tooltip,
+                                        { title: isBinaryOutput ? "화면에 보이는 HEX/ASCII 결과 복사" : "디코딩 결과 복사" },
+                                        React.createElement(
+                                            MaterialUI.Button,
+                                            {
+                                                size: "small",
+                                                color: "primary",
+                                                variant: "outlined",
+                                                startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
+                                                onClick: async () => {
+                                                    if (!output) return;
+                                                    try {
+                                                        if (isBinaryOutput) {
+                                                            await navigator.clipboard.writeText(toHexView(output));
+                                                        } else {
+                                                            await navigator.clipboard.writeText(output);
+                                                        }
+                                                        showToast('복사했습니다.', 'success');
+                                                    } catch {
+                                                        showToast('복사에 실패했습니다.', 'error');
+                                                    }
+                                                },
+                                                sx: { verticalAlign: 'middle' },
+                                                disabled: !output
+                                            },
+                                            "복사"
+                                        )
+                                    )
+                                ),
+                                // 디코딩 결과 (원본)
+                                React.createElement(Box, { sx: { position: 'relative' } },
+                                    error === '디코딩할 수 없는 데이터입니다.' ? (
+                                        React.createElement('div', {
+                                            style: {
+                                                minHeight: 220,
+                                                maxHeight: 320,
+                                                background: '#fff3e0',
+                                                color: '#c62828',
+                                                borderRadius: 6,
+                                                padding: 32,
+                                                fontSize: 18,
+                                                fontWeight: 500,
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                marginBottom: '20px',
+                                                border: '1.5px solid #ffc107'
+                                            }
+                                        },
+                                            React.createElement('div', null, "디코딩할 수 없는 데이터입니다."),
+                                            encoding && React.createElement('div', {
+                                                style: {
+                                                    marginTop: 18,
+                                                    fontSize: 15,
+                                                    color: '#1976d2',
+                                                    fontWeight: 400,
+                                                    background: '#e3f2fd',
+                                                    borderRadius: 4,
+                                                    padding: '6px 16px'
+                                                }
+                                            }, `입력 데이터 형식: ${encoding}`)
+                                        )
+                                    ) : (
+                                        isBinaryOutput
+                                            ? React.createElement('pre', {
+                                                style: {
+                                                    margin: 0,
+                                                    minHeight: 220,
+                                                    maxHeight: 320,
+                                                    overflow: 'auto',
+                                                    background: '#23272e',
+                                                    color: '#fff',
+                                                    borderRadius: 6,
+                                                    padding: 16,
+                                                    fontSize: 14,
+                                                    fontFamily: 'Consolas, monospace',
+                                                    marginBottom: '20px'
+                                                }
+                                            }, toHexView(output))
+                                            : React.createElement(TextField, {
+                                                label: "디코딩 결과 (원본)",
+                                                variant: "outlined",
+                                                fullWidth: true,
+                                                multiline: true,
+                                                rows: 12,
+                                                value: output,
+                                                InputLabelProps: { shrink: true },
+                                                inputRef: outputRef,
+                                                style: { marginBottom: '20px', background: "#fafdff" },
+                                                InputProps: { readOnly: true }
+                                            })
+                                    ),
+                                    React.createElement('span', {
+                                        style: {
+                                            position: 'absolute',
+                                            right: 16,
+                                            bottom: 10,
+                                            fontSize: 13,
+                                            color: '#888',
+                                            background: '#fafdff',
+                                            padding: '0 6px'
+                                        }
+                                    }, `${bytesLen(output)} bytes`),
+
+                                    // 이미지 미리보기 및 다운로드 버튼
+                                    (() => {
+                                        let imgSrc = null;
+                                        let mime = null;
+                                        let fileExt = null;
+                                        if (typeof output === 'string' && output.length > 0) {
+                                            const dataUrlMatch = output.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/);
+                                            if (dataUrlMatch) {
+                                                imgSrc = output;
+                                                mime = dataUrlMatch[1];
+                                                fileExt = mime.split('/')[1] || 'png';
+                                            } else {
+                                                const info = sniffImage(output);
+                                                if (info) {
+                                                    mime = info.mime; fileExt = info.ext;
+                                                    if (info.mime === 'image/svg+xml') {
+                                                        imgSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(output)));
+                                                    } else {
+                                                        imgSrc = 'data:' + mime + ';base64,' + binaryStringToBase64(output);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (imgSrc) {
+                                            return React.createElement(Box, { sx: { mt: 2, mb: 2, textAlign: 'center' } },
+                                                React.createElement(Typography, { variant: "subtitle2", sx: { mb: 1 } }, `이미지 미리보기 (${mime})`),
+                                                React.createElement('img', {
+                                                    src: imgSrc,
+                                                    alt: "Decoded Image",
+                                                    style: { maxWidth: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid #eee', background: '#fff', display: 'block', margin: '0 auto 12px auto' }
+                                                }),
+                                                React.createElement(
+                                                    MaterialUI.Button,
+                                                    {
+                                                        variant: "contained",
+                                                        color: "primary",
+                                                        size: "small",
+                                                        startIcon: React.createElement("span", { className: "material-icons" }, "download"),
+                                                        onClick: () => {
+                                                            const a = document.createElement('a');
+                                                            a.href = imgSrc;
+                                                            a.download = `decoded_image.${fileExt || 'png'}`;
+                                                            document.body.appendChild(a);
+                                                            a.click();
+                                                            document.body.removeChild(a);
+
+                                                            // 저장 완료 토스트
+                                                            showToast('이미지를 저장했습니다.', 'success');
+                                                        },
+                                                        sx: { mt: 1 }
+                                                    },
+                                                    "이미지 저장"
+                                                )
+                                            );
+                                        }
+                                        return null;
+                                    })()
+                                ),
+
+                                // beautify / syntax checks 그대로
+                                renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine)
+                            ),
+
+                            // ----------------- 인코딩 탭 -----------------
+                            tab === 1 && React.createElement(Box, null,
+                                React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
+                                    "아래 입력창에 텍스트를 입력하고, 원하는 인코딩 방식을 선택하면 인코딩 결과가 바로 표시됩니다."
+                                ),
+                                // 입력 초기화 버튼
+                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1 } },
+                                    React.createElement(
+                                        MaterialUI.Button,
+                                        {
+                                            variant: "outlined",
+                                            color: "secondary",
+                                            size: "small",
+                                            startIcon: React.createElement("span", { className: "material-icons" }, "clear"),
+                                            onClick: () => setEncodeInput(''),
+                                            disabled: !encodeInput
+                                        },
+                                        "입력 초기화"
+                                    )
+                                ),
+                                // 1. 인코딩 입력 (드래그앤드롭 지원 + 드래그오버 UI)
+                                React.createElement(Box, {
+                                    sx: { position: 'relative', mb: 3, borderRadius: 2 },
+                                    onDrop: (e) => handleFileDrop(e, setEncodeInput).finally(() => setIsDragOverEncode(false)),
+                                    onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverEncode(true); },
+                                    onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverEncode(false); }
+                                },
+                                    React.createElement(TextField, {
+                                        label: "일반 텍스트 입력",
+                                        variant: "outlined",
+                                        fullWidth: true,
+                                        multiline: true,
+                                        rows: 12,
+                                        value: encodeInput,
+                                        onChange: e => setEncodeInput(e.target.value),
+                                        placeholder: "여기에 값을 입력하거나 파일을 드래그 앤 드롭하세요. 선택한 방식으로 인코딩됩니다.",
+                                        InputLabelProps: { shrink: true },
+                                        inputRef: encodeInputRef,
+                                        inputProps: {
+                                            onDrop: (e) => handleFileDrop(e, setEncodeInput).finally(() => setIsDragOverEncode(false)),
+                                            onDragOver: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverEncode(true); },
+                                            onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverEncode(false); }
+                                        },
+                                        sx: {
+                                            marginBottom: '20px',
+                                            background: isDragOverEncode ? "#e3f2fd" : "#fafdff",
+                                            borderRadius: 2,
+                                            transition: "background 0.2s"
+                                        }
+                                    }),
+                                    isDragOverEncode && React.createElement('div', {
+                                        style: {
+                                            pointerEvents: 'none',
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: 8,
+                                            border: '2.5px dashed #1976d2',
+                                            background: 'rgba(25, 118, 210, 0.10)',
+                                            zIndex: 10,
+                                            transition: "border 0.2s, background 0.2s",
+                                            boxSizing: 'border-box'
+                                        }
+                                    },
+                                        React.createElement('div', {
+                                            style: {
+                                                color: '#1976d2',
+                                                fontWeight: 600,
+                                                fontSize: 20,
+                                                background: 'rgba(255,255,255,0.85)',
+                                                borderRadius: 6,
+                                                padding: '18px 36px',
+                                                boxShadow: '0 2px 12px 0 rgba(25,118,210,0.08)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 10
+                                            }
+                                        },
+                                            React.createElement("span", { className: "material-icons", style: { fontSize: 28, marginRight: 8 } }, "file_upload"),
+                                            "여기에 파일을 드롭하면 내용이 입력됩니다"
+                                        )
+                                    ),
+                                    React.createElement('span', {
+                                        style: {
+                                            position: 'absolute',
+                                            right: 16,
+                                            bottom: 10,
+                                            fontSize: 13,
+                                            color: '#888',
+                                            background: '#fafdff',
+                                            padding: '0 6px'
+                                        }
+                                    }, `${bytesLen(encodeInput)} bytes`)
+                                ),
+                                // 인코딩 알고리즘 리스트 (레지스트리 기반)
+                                React.createElement(Box, { sx: { mb: 1 } },
+                                    React.createElement(Typography, {
+                                        variant: "subtitle2",
+                                        sx: { display: 'flex', alignItems: 'center', fontWeight: 700, color: 'primary.main' }
+                                    },
+                                        React.createElement("span", { className: "material-icons", style: { fontSize: 18, marginRight: 6 } }, "tune"),
+                                        "인코딩 방식 선택"
+                                    )
+                                ),
+                                React.createElement(Box, { sx: { mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 } },
+                                    encoderLabels.map(type =>
+                                        React.createElement(Chip, {
+                                            key: type,
+                                            label: type,
+                                            size: "small",
+                                            variant: "outlined",
+                                            sx: {
+                                                mr: 1, mb: 1,
+                                                borderColor: encodeType === type ? 'primary.main' : '#e0e0e0',
+                                                color: encodeType === type ? 'primary.main' : 'text.secondary',
+                                                bgcolor: 'transparent',
+                                                cursor: 'pointer',
+                                                '&:hover': { bgcolor: '#fafafa' }
+                                            },
+                                            clickable: true,
+                                            onClick: () => setEncodeType(type)
+                                        })
+                                    )
+                                ),
+                                // 선택된 인코딩 설명 (outlined Alert 스타일)
+                                React.createElement(MaterialUI.Alert, {
+                                    severity: "info",
+                                    variant: "outlined",
+                                    sx: {
+                                        mb: 2,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        borderWidth: 1.5,
+                                        borderColor: '#1976d2',
+                                        color: '#1976d2',
+                                        backgroundColor: 'transparent',
+                                        borderRadius: 2
+                                    },
+                                    icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "info")
+                                },
+                                    React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
+                                        React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, "알고리즘 설명"),
+                                        React.createElement(Typography, { variant: "caption" }, Codecs.getDescriptionByLabel(encodeType))
+                                    )
+                                ),
+
+                                // 결과 복사
+                                React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                    React.createElement(
+                                        Tooltip,
+                                        { title: "인코딩 결과 복사" },
+                                        React.createElement(
+                                            MaterialUI.Button,
+                                            {
+                                                size: "small",
+                                                color: "primary",
+                                                variant: "outlined",
+                                                startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
+                                                onClick: async () => {
+                                                    if (!encodeResult) return;
+                                                    try {
+                                                        await navigator.clipboard.writeText(encodeResult);
+                                                        showToast('복사했습니다.', 'success');
+                                                    } catch {
+                                                        showToast('복사에 실패했습니다.', 'error');
+                                                    }
+                                                },
+                                                sx: { verticalAlign: 'middle' },
+                                                disabled: !encodeResult
+                                            },
+                                            "복사"
+                                        )
+                                    )
+                                ),
+                                React.createElement(TextField, {
+                                    label: "인코딩 결과",
+                                    variant: "outlined",
+                                    fullWidth: true,
+                                    multiline: true,
+                                    rows: 12,
+                                    value: encodeResult,
+                                    InputLabelProps: { shrink: true },
+                                    style: { marginBottom: '20px', background: "#fafdff" },
+                                    InputProps: { readOnly: true }
+                                }),
+                                React.createElement(Typography, { variant: "caption", color: "textSecondary", align: "center", display: "block" },
+                                    "입력값은 브라우저에서만 처리되며 저장되지 않습니다."
+                                )
+                            ),
+                            // 전역 Snackbar
+                            React.createElement(
+                                MaterialUI.Portal,
+                                { container: document.body },
+                                React.createElement(
+                                    MaterialUI.Snackbar,
+                                    {
+                                        open: toast.open,
+                                        autoHideDuration: 1000,
+                                        onClose: handleToastClose,
+                                        anchorOrigin: { vertical: 'bottom', horizontal: 'center' }
+                                    },
+                                    React.createElement(
+                                        MaterialUI.Alert,
+                                        { onClose: handleToastClose, severity: toast.severity, sx: { width: '100%' } },
+                                        toast.message
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(EncoderDecoderTabs));
+
+        // base64 helper (기존 함수 유지)
+        function binaryStringToBase64(binStr) {
+            const bytes = Uint8Array.from(Array.from(binStr).map(ch => ch.charCodeAt(0)));
+            let binary = '';
+            bytes.forEach(b => binary += String.fromCharCode(b));
+            return btoa(binary);
+        }
+    </script>
+</body>
+</html>
