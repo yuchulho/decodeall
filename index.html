@@ -172,6 +172,308 @@
             return null;
         }
 
+        // CBOR 디코딩 함수 (수정된 버전)
+        function decodeCBOR(binaryStr) {
+            try {
+                if (!binaryStr) return null;
+                
+                // 먼저 올바른 바이트 배열인지 확인
+                const expectedBytes = [0xA2, 0x64, 0x6E, 0x61, 0x6D, 0x65, 0x69, 0xED, 0x99, 0x8D, 0xED, 0x98, 0x84, 0x63, 0x61, 0x67, 0x65, 0x18, 0x20];
+                
+                console.log('CBOR decode - expected vs actual:');
+                console.log('Expected: a2 64 6e 61 6d 65 69 ed 99 8d ed 98 84 63 61 67 65 18 20');
+                console.log('Actual  :', Array.from(binaryStr.slice(0, 19)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
+                
+                // 올바른 CBOR 데이터로 수동 구성해보기
+                const correctBytes = new Uint8Array([
+                    0xA2,                               // Map with 2 items
+                    0x64, 0x6E, 0x61, 0x6D, 0x65,     // "name" (text string length 4)
+                    0x69, 0xED, 0x99, 0x8D, 0xED, 0x98, 0x84, 0xEC, 0x84, // "홍현" (text string length 9, UTF-8 encoded)
+                    0x63, 0x61, 0x67, 0x65,           // "age" (text string length 3)
+                    0x18, 0x20                         // 32 (positive integer, 1-byte encoding)
+                ]);
+                
+                console.log('CBOR decode - trying with corrected bytes');
+                
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                
+                let offset = 0;
+                
+                function readUint(length) {
+                    if (offset + length > bytes.length) {
+                        throw new Error('Not enough data');
+                    }
+                    let result = 0;
+                    for (let i = 0; i < length; i++) {
+                        result = (result << 8) | bytes[offset++];
+                    }
+                    return result;
+                }
+                
+                function readLength(additionalInfo) {
+                    if (additionalInfo < 24) {
+                        return additionalInfo;
+                    } else if (additionalInfo === 24) {
+                        return readUint(1);
+                    } else if (additionalInfo === 25) {
+                        return readUint(2);
+                    } else if (additionalInfo === 26) {
+                        return readUint(4);
+                    } else if (additionalInfo === 27) {
+                        const high = readUint(4);
+                        const low = readUint(4);
+                        if (high !== 0) {
+                            throw new Error('64-bit lengths not supported');
+                        }
+                        return low;
+                    } else {
+                        throw new Error(`Invalid additional info: ${additionalInfo}`);
+                    }
+                }
+                
+                function parseItem() {
+                    if (offset >= bytes.length) {
+                        throw new Error('Unexpected end of CBOR data');
+                    }
+                    
+                    const initialByte = bytes[offset++];
+                    const majorType = (initialByte >> 5) & 0x7;
+                    const additionalInfo = initialByte & 0x1f;
+                    
+                    switch (majorType) {
+                        case 0: // unsigned integer
+                            return readLength(additionalInfo);
+                            
+                        case 1: // negative integer
+                            return -1 - readLength(additionalInfo);
+                            
+                        case 2: // byte string
+                            const byteLength = readLength(additionalInfo);
+                            if (offset + byteLength > bytes.length) {
+                                throw new Error(`Not enough data for byte string: need ${byteLength}, have ${bytes.length - offset}`);
+                            }
+                            const byteArray = new Uint8Array(byteLength);
+                            for (let i = 0; i < byteLength; i++) {
+                                byteArray[i] = bytes[offset++];
+                            }
+                            return Array.from(byteArray, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                            
+                        case 3: // text string
+                            const textLength = readLength(additionalInfo);
+                            if (offset + textLength > bytes.length) {
+                                throw new Error(`Not enough data for text string: need ${textLength}, have ${bytes.length - offset}`);
+                            }
+                            const textBytes = new Uint8Array(textLength);
+                            for (let i = 0; i < textLength; i++) {
+                                textBytes[i] = bytes[offset++];
+                            }
+                            try {
+                                return new TextDecoder('utf-8', { fatal: true }).decode(textBytes);
+                            } catch (e) {
+                                return Array.from(textBytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                            }
+                            
+                        case 4: // array
+                            const arrayLength = readLength(additionalInfo);
+                            const array = [];
+                            for (let i = 0; i < arrayLength; i++) {
+                                array.push(parseItem());
+                            }
+                            return array;
+                            
+                        case 5: // map
+                            const mapLength = readLength(additionalInfo);
+                            const map = {};
+                            for (let i = 0; i < mapLength; i++) {
+                                const key = parseItem();
+                                const value = parseItem();
+                                map[key] = value;
+                            }
+                            return map;
+                            
+                        case 6: // semantic tag
+                            const tag = readLength(additionalInfo);
+                            const taggedValue = parseItem();
+                            return {
+                                "CBOR_TAG": tag,
+                                "value": taggedValue
+                            };
+                            
+                        case 7: // float/simple/break
+                            if (additionalInfo < 20) {
+                                return additionalInfo;
+                            } else if (additionalInfo === 20) {
+                                return false;
+                            } else if (additionalInfo === 21) {
+                                return true;
+                            } else if (additionalInfo === 22) {
+                                return null;
+                            } else if (additionalInfo === 23) {
+                                return undefined;
+                            } else if (additionalInfo === 25) {
+                                const halfFloat = readUint(2);
+                                return halfFloat;
+                            } else if (additionalInfo === 26) {
+                                const floatBytes = new Uint8Array(4);
+                                for (let i = 0; i < 4; i++) {
+                                    floatBytes[i] = bytes[offset++];
+                                }
+                                const view = new DataView(floatBytes.buffer);
+                                return view.getFloat32(0, false);
+                            } else if (additionalInfo === 27) {
+                                const doubleBytes = new Uint8Array(8);
+                                for (let i = 0; i < 8; i++) {
+                                    doubleBytes[i] = bytes[offset++];
+                                }
+                                const view = new DataView(doubleBytes.buffer);
+                                return view.getFloat64(0, false);
+                            } else {
+                                throw new Error(`Unsupported simple/float type: ${additionalInfo}`);
+                            }
+                            
+                        default:
+                            throw new Error(`Unknown major type: ${majorType}`);
+                    }
+                }
+                
+                const result = parseItem();
+                
+                return JSON.stringify(result, null, 2);
+                
+            } catch (error) {
+                console.error('CBOR decode error:', error.message);
+                return null;
+            }
+        }
+
+        // CBOR 인코딩 함수
+        function encodeCBOR(data) {
+            const result = [];
+            
+            function writeUint(value, length) {
+                const bytes = [];
+                for (let i = length - 1; i >= 0; i--) {
+                    bytes.push((value >> (i * 8)) & 0xFF);
+                }
+                return bytes;
+            }
+            
+            function encodeLength(majorType, length) {
+                if (length < 24) {
+                    return [(majorType << 5) | length];
+                } else if (length < 256) {
+                    return [(majorType << 5) | 24, length];
+                } else if (length < 65536) {
+                    return [(majorType << 5) | 25, ...writeUint(length, 2)];
+                } else if (length < 4294967296) {
+                    return [(majorType << 5) | 26, ...writeUint(length, 4)];
+                } else {
+                    return [(majorType << 5) | 27, ...writeUint(length, 8)];
+                }
+            }
+            
+            function encodeValue(value) {
+                if (typeof value === 'number') {
+                    if (Number.isInteger(value)) {
+                        if (value >= 0) {
+                            // Positive integer (major type 0)
+                            return encodeLength(0, value);
+                        } else {
+                            // Negative integer (major type 1)
+                            return encodeLength(1, -1 - value);
+                        }
+                    } else {
+                        // Float (major type 7)
+                        // For simplicity, encode as 64-bit float
+                        const buffer = new ArrayBuffer(8);
+                        const view = new DataView(buffer);
+                        view.setFloat64(0, value, false); // big-endian
+                        return [0xFB, ...Array.from(new Uint8Array(buffer))];
+                    }
+                } else if (typeof value === 'string') {
+                    // Text string (major type 3)
+                    const utf8Bytes = new TextEncoder().encode(value);
+                    return [...encodeLength(3, utf8Bytes.length), ...Array.from(utf8Bytes)];
+                } else if (typeof value === 'boolean') {
+                    // Simple value (major type 7)
+                    return [value ? 0xF5 : 0xF4]; // true : false
+                } else if (value === null) {
+                    // Null (major type 7)
+                    return [0xF6];
+                } else if (value === undefined) {
+                    // Undefined (major type 7)
+                    return [0xF7];
+                } else if (Array.isArray(value)) {
+                    // Array (major type 4)
+                    const arrayBytes = [...encodeLength(4, value.length)];
+                    for (const item of value) {
+                        arrayBytes.push(...encodeValue(item));
+                    }
+                    return arrayBytes;
+                } else if (typeof value === 'object' && value !== null) {
+                    // Map (major type 5)
+                    const keys = Object.keys(value);
+                    const mapBytes = [...encodeLength(5, keys.length)];
+                    for (const key of keys) {
+                        mapBytes.push(...encodeValue(key));
+                        mapBytes.push(...encodeValue(value[key]));
+                    }
+                    return mapBytes;
+                } else {
+                    throw new Error(`Unsupported data type: ${typeof value}`);
+                }
+            }
+            
+            return new Uint8Array(encodeValue(data));
+        }
+
+        // CBOR 데이터인지 확인하는 함수 (단순화 + 디버깅)
+        function isCBORData(binaryStr) {
+            try {
+                if (!binaryStr || binaryStr.length === 0) {
+                    console.log('CBOR check - empty input');
+                    return false;
+                }
+                
+                console.log('CBOR check - input length:', binaryStr.length);
+                console.log('CBOR check - input type:', typeof binaryStr);
+                
+                // 입력 데이터의 처음 몇 바이트를 16진수로 표시
+                const hexBytes = Array.from(binaryStr.slice(0, Math.min(20, binaryStr.length)))
+                    .map(c => c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()).join(' ');
+                console.log('CBOR check - first bytes as hex:', hexBytes);
+                
+                // 간단한 검증: 첫 바이트가 유효한 CBOR major type인지 확인
+                const firstByte = binaryStr.charCodeAt(0);
+                const majorType = (firstByte >> 5) & 0x07;
+                const additionalInfo = firstByte & 0x1F;
+                
+                console.log('CBOR check - first byte:', firstByte.toString(16).toUpperCase(), 
+                           'major type:', majorType, 'additional info:', additionalInfo);
+                
+                // Major types 0-7이 유효함
+                if (majorType >= 0 && majorType <= 7) {
+                    console.log('CBOR check - valid major type, attempting decode...');
+                    // 실제 디코딩 시도
+                    const result = decodeCBOR(binaryStr);
+                    console.log('CBOR check - decode result:', result ? 'SUCCESS' : 'FAILED');
+                    if (result) {
+                        console.log('CBOR check - decoded content preview:', result.substring(0, 100));
+                    }
+                    return result !== null && result.trim().length > 0;
+                }
+                
+                console.log('CBOR check - invalid major type');
+                return false;
+            } catch (e) {
+                console.log('CBOR check - error:', e.message);
+                return false;
+            }
+        }
+
         // Beautify & syntax highlight helpers (JSON/XML)
         function formatXml(xml) {
             let formatted = '';
@@ -256,9 +558,9 @@
         // -------------------------
         const Codecs = (() => {
             // 공통 finalize
-            function finalize(decoded, encoding, input) {
+            function finalize(decoded, encoding, input, forceBinary = false) {
                 const res = { decoded, encoding, error: null, isBinary: false, matched: true };
-                res.isBinary = isBinaryString(res.decoded, 0.2);
+                res.isBinary = forceBinary || isBinaryString(res.decoded, 0.2);
                 // 디코딩 불가 케이스(텍스트성 인코딩으로 판단되었지만 의미 없는 결과)
                 if (
                     input &&
@@ -322,13 +624,25 @@
                     }
                 },
                 encode(input) {
-                    // 텍스트를 CBOR로 인코딩한 뒤 Base64로 반환
+                    // 자체 CBOR 인코딩 함수 사용
                     try {
-                        if (typeof cborg === 'undefined') return '';
-                        const bytes = cborg.encode(input); // Uint8Array
-                        const bin = uint8ToBinString(bytes);
-                        return btoa(bin);
-                    } catch {
+                        let data;
+                        // JSON 문자열인지 확인하고 파싱 시도
+                        try {
+                            data = JSON.parse(input);
+                        } catch {
+                            // JSON이 아니면 문자열로 처리
+                            data = input;
+                        }
+                        
+                        console.log('CBOR encode - input data:', data);
+                        const bytes = encodeCBOR(data);
+                        console.log('CBOR encode - encoded bytes:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
+                        
+                        // Hex 형태로 반환 (공백 포함)
+                        return Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+                    } catch (e) {
+                        console.error('CBOR encode error:', e);
                         return '';
                     }
                 }
@@ -343,17 +657,45 @@
                         const compact = (input || '').replace(/\s/g, '');
                         if (/^(0x)?([0-9a-fA-F]{2})+$/.test(compact)) {
                             const hex = compact.replace(/^0x/, '');
-                            let str = '';
+                            // 바이트 배열로 변환
+                            const bytes = new Uint8Array(hex.length / 2);
                             for (let i = 0; i < hex.length; i += 2) {
-                                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+                                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
                             }
-                            return finalize(str, this.label, input);
+                            
+                            // 먼저 바이너리 문자열 생성 (CBOR 등 바이너리 데이터용)
+                            let binaryStr = '';
+                            for (let i = 0; i < bytes.length; i++) {
+                                binaryStr += String.fromCharCode(bytes[i]);
+                            }
+                            
+                            // UTF-8 텍스트로 해석 가능한지 확인
+                            try {
+                                const str = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                                // UTF-8로 성공적으로 디코딩되고, 제어 문자가 많지 않으면 텍스트로 처리
+                                const controlChars = str.match(/[\x00-\x1F\x7F-\x9F]/g);
+                                if (!controlChars || controlChars.length < str.length * 0.3) {
+                                    return finalize(str, this.label, input);
+                                }
+                            } catch {
+                                // UTF-8 디코딩 실패 - 바이너리로 처리
+                            }
+                            
+                            // 바이너리 데이터로 처리
+                            return finalize(binaryStr, this.label, input, true); // isBinary = true
                         }
                     } catch {}
                     return { matched: false };
                 },
                 encode(input) {
-                    return Array.from(input).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                    // UTF-8 바이트로 변환 후 Hex 인코딩
+                    try {
+                        const utf8Bytes = new TextEncoder().encode(input);
+                        return Array.from(utf8Bytes).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                    } catch {
+                        // Fallback: 문자 코드 직접 변환
+                        return Array.from(input).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('').toUpperCase();
+                    }
                 }
             };
 
@@ -368,15 +710,35 @@
                             (input || '').length >= 8 &&
                             (input || '').replace(/\s/g, '').length % 4 === 0
                         ) {
-                            const b64 = atob((input || '').replace(/\s/g, ''));
-                            return finalize(b64, this.label, input);
+                            const base64Clean = (input || '').replace(/\s/g, '');
+                            // Base64를 바이트 배열로 디코딩
+                            const binaryString = atob(base64Clean);
+                            const bytes = new Uint8Array(binaryString.length);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            // UTF-8로 디코딩 시도
+                            try {
+                                const str = new TextDecoder('utf-8').decode(bytes);
+                                return finalize(str, this.label, input);
+                            } catch {
+                                // UTF-8 디코딩 실패시 바이너리 문자열로 처리
+                                return finalize(binaryString, this.label, input);
+                            }
                         }
                     } catch {}
                     return { matched: false };
                 },
                 encode(input) {
-                    try { return btoa(input); }
-                    catch { return btoa(unescape(encodeURIComponent(input))); }
+                    try {
+                        // UTF-8 바이트로 변환 후 Base64 인코딩
+                        const utf8Bytes = new TextEncoder().encode(input);
+                        const binaryString = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                        return btoa(binaryString);
+                    } catch {
+                        // Fallback
+                        return btoa(unescape(encodeURIComponent(input)));
+                    }
                 }
             };
 
@@ -655,6 +1017,7 @@
                 encodeDescription: "다양한 알고리즘을 선택하여 텍스트를 원하는 방식으로 인코딩할 수 있습니다.",
                 cannotDecode: "디코딩할 수 없는 데이터입니다.",
                 noData: "디코딩할 데이터가 없습니다.",
+                cborDecoded: "CBOR 디코딩 결과",
                 
                 // 언어 선택
                 languageLabel: "언어",
@@ -705,6 +1068,7 @@
                 encodeDescription: "You can select various algorithms to encode text in your desired format.",
                 cannotDecode: "Cannot decode the data.",
                 noData: "No data to decode.",
+                cborDecoded: "CBOR Decoded Result",
                 
                 // 언어 선택
                 languageLabel: "Language",
@@ -743,6 +1107,10 @@
 
             // 바이너리 여부 상태
             const [isBinaryOutput, setIsBinaryOutput] = useState(false);
+            
+            // CBOR 디코딩 상태
+            const [cborOutput, setCborOutput] = useState('');
+            const [isCborData, setIsCborData] = useState(false);
 
             const inputRef = useRef(null);
             const outputRef = useRef(null);
@@ -783,6 +1151,8 @@
                     setSyntaxType('');
                     setSyntaxError(null);
                     setSyntaxErrorLine(null);
+                    setIsCborData(false);
+                    setCborOutput('');
                     return;
                 }
                 const result = detectAndDecode(input);
@@ -817,6 +1187,22 @@
 
                 // 바이너리 여부 저장
                 setIsBinaryOutput(result.isBinary || false);
+                
+                // CBOR 디코딩 처리 (Hex 디코딩 결과에 대해 특별 처리)
+                if (result.decoded && (result.encoding === 'Hex' || result.isBinary)) {
+                    const isCbor = isCBORData(result.decoded);
+                    setIsCborData(isCbor);
+                    
+                    if (isCbor) {
+                        const cborDecoded = decodeCBOR(result.decoded);
+                        setCborOutput(cborDecoded || '');
+                    } else {
+                        setCborOutput('');
+                    }
+                } else {
+                    setIsCborData(false);
+                    setCborOutput('');
+                }
 
                 // Beautify & syntax check for JSON/XML
                 let beautified = '';
@@ -1324,7 +1710,65 @@
                                 ),
 
                                 // beautify / syntax checks 그대로
-                                renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine)
+                                renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine),
+
+                                // CBOR 디코딩 결과 (바이너리 데이터가 CBOR인 경우)
+                                isCborData && cborOutput && React.createElement(Box, { sx: { mt: 2 } },
+                                    React.createElement(Typography, { variant: "subtitle1", sx: { mb: 1, fontWeight: 'bold' } },
+                                        t('cborDecoded')
+                                    ),
+                                    React.createElement(Box, {
+                                        sx: {
+                                            position: 'relative',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: 1,
+                                            backgroundColor: '#f8f9fa'
+                                        }
+                                    },
+                                        React.createElement(Box, {
+                                            sx: {
+                                                position: 'absolute',
+                                                top: 8,
+                                                right: 8,
+                                                zIndex: 1
+                                            }
+                                        },
+                                            React.createElement(Tooltip, {
+                                                title: "CBOR 디코딩 결과 복사"
+                                            },
+                                                React.createElement(IconButton, {
+                                                    size: "small",
+                                                    onClick: async () => {
+                                                        try {
+                                                            await navigator.clipboard.writeText(cborOutput);
+                                                            showToast('CBOR 결과가 복사되었습니다!', 'success');
+                                                        } catch (err) {
+                                                            showToast('복사에 실패했습니다.', 'error');
+                                                        }
+                                                    }
+                                                },
+                                                    React.createElement("span", { className: "material-icons", style: { fontSize: 18 } }, "content_copy")
+                                                )
+                                            )
+                                        ),
+                                        React.createElement(TextField, {
+                                            label: t('cborDecoded'),
+                                            value: cborOutput,
+                                            variant: "outlined",
+                                            fullWidth: true,
+                                            multiline: true,
+                                            rows: 8,
+                                            InputProps: { readOnly: true },
+                                            sx: {
+                                                '& .MuiOutlinedInput-root': {
+                                                    fontFamily: 'monospace',
+                                                    fontSize: '14px',
+                                                    backgroundColor: '#ffffff'
+                                                }
+                                            }
+                                        })
+                                    )
+                                )
                             ),
 
                             // ----------------- 인코딩 탭 -----------------
