@@ -704,8 +704,8 @@
                         const bytes = encodeCBOR(data);
                         console.log('CBOR encode - encoded bytes:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
                         
-                        // Hex 형태로 반환 (공백 포함)
-                        return Array.from(bytes).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+                        // Binary 형태로 반환
+                        return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
                     } catch (e) {
                         console.error('CBOR encode error:', e);
                         return '';
@@ -1169,6 +1169,7 @@
             const [encodeInput, setEncodeInput] = useState('');
             const [encodeType, setEncodeType] = useState('Base64');
             const [encodeResult, setEncodeResult] = useState('');
+            const [encodeHexResult, setEncodeHexResult] = useState('');
 
             // 바이너리 여부 상태
             const [isBinaryOutput, setIsBinaryOutput] = useState(false);
@@ -1324,9 +1325,27 @@
             useEffect(() => {
                 if (!encodeInput) {
                     setEncodeResult('');
+                    setEncodeHexResult('');
                     return;
                 }
-                setEncodeResult(encodeText(encodeInput, encodeType));
+                
+                const result = encodeText(encodeInput, encodeType);
+                setEncodeResult(result);
+                
+                // CBOR 인코딩인 경우 hex 결과도 생성
+                if (encodeType === 'CBOR' && result) {
+                    try {
+                        // Binary 결과를 hex로 변환
+                        const hexResult = Array.from(result)
+                            .map(c => c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase())
+                            .join(' ');
+                        setEncodeHexResult(hexResult);
+                    } catch (e) {
+                        setEncodeHexResult('');
+                    }
+                } else {
+                    setEncodeHexResult('');
+                }
             }, [encodeInput, encodeType]);
 
             // Chip 목록(선택 UI 완화)은 레지스트리에서 가져오기
@@ -2042,6 +2061,48 @@
                                     style: { marginBottom: '20px', background: "#fafdff" },
                                     InputProps: { readOnly: true }
                                 }),
+                                
+                                // CBOR 인코딩 시 hex 결과 표시
+                                encodeType === 'CBOR' && encodeHexResult ? React.createElement(Box, { sx: { mb: 2 } },
+                                    React.createElement(Box, { sx: { mb: 1, textAlign: 'right' } },
+                                        React.createElement(
+                                            Tooltip,
+                                            { title: "Hex 결과 복사" },
+                                            React.createElement(
+                                                MaterialUI.Button,
+                                                {
+                                                    size: "small",
+                                                    color: "secondary",
+                                                    variant: "outlined",
+                                                    startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
+                                                    onClick: async () => {
+                                                        if (!encodeHexResult) return;
+                                                        try {
+                                                            await navigator.clipboard.writeText(encodeHexResult);
+                                                            showToast(t('copySuccess'), 'success');
+                                                        } catch {
+                                                            showToast(t('copyError'), 'error');
+                                                        }
+                                                    },
+                                                    sx: { verticalAlign: 'middle' },
+                                                    disabled: !encodeHexResult
+                                                },
+                                                "Hex 복사"
+                                            )
+                                        )
+                                    ),
+                                    React.createElement(TextField, {
+                                        label: "Hex 결과",
+                                        variant: "outlined",
+                                        fullWidth: true,
+                                        multiline: true,
+                                        rows: 6,
+                                        value: encodeHexResult,
+                                        InputLabelProps: { shrink: true },
+                                        style: { marginBottom: '20px', background: "#fff8e1" },
+                                        InputProps: { readOnly: true }
+                                    })
+                                ) : null,
                                 
                             ),
                             // 전역 Snackbar
