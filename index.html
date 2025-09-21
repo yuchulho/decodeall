@@ -115,6 +115,32 @@
             return lines.join('\n');
         }
         
+        // Base64/바이너리 변환 유틸리티 함수들
+        function base64ToUint8(base64Str) {
+            const binaryStr = atob(base64Str.replace(/\s/g, ''));
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) {
+                bytes[i] = binaryStr.charCodeAt(i) & 0xFF;
+            }
+            return bytes;
+        }
+        
+        function uint8ToBinString(uint8Array) {
+            let binaryString = '';
+            for (let i = 0; i < uint8Array.length; i++) {
+                binaryString += String.fromCharCode(uint8Array[i] & 0xFF);
+            }
+            return binaryString;
+        }
+        
+        function binStringToUint8(binaryStr) {
+            const bytes = new Uint8Array(binaryStr.length);
+            for (let i = 0; i < binaryStr.length; i++) {
+                bytes[i] = binaryStr.charCodeAt(i) & 0xFF;
+            }
+            return bytes;
+        }
+        
         // 파일 다운로드 함수
         function downloadTextFile(content, filename = 'decoded_result.txt') {
             try {
@@ -167,12 +193,13 @@
                     const text = await file.text();
                     setValue(text);
                 } else {
-                    // 바이너리 파일: 바이너리 문자열 로딩
+                    // 바이너리 파일: 바이너리 문자열 로딩 (개선된 방식)
                     const arrayBuffer = await file.arrayBuffer();
                     const bytes = new Uint8Array(arrayBuffer);
                     let binaryString = '';
+                    // 바이트 값을 정확히 보존하기 위해 & 0xFF 적용
                     for (let i = 0; i < bytes.length; ++i) {
-                        binaryString += String.fromCharCode(bytes[i]);
+                        binaryString += String.fromCharCode(bytes[i] & 0xFF);
                     }
                     setValue(binaryString);
                 }
@@ -191,12 +218,13 @@
                         const text = await file.text();
                         setValue(text);
                     } else {
-                        // 바이너리 파일: 바이너리 문자열 로딩
+                        // 바이너리 파일: 바이너리 문자열 로딩 (개선된 방식)
                         const arrayBuffer = await file.arrayBuffer();
                         const bytes = new Uint8Array(arrayBuffer);
                         let binaryString = '';
+                        // 바이트 값을 정확히 보존하기 위해 & 0xFF 적용
                         for (let i = 0; i < bytes.length; ++i) {
-                            binaryString += String.fromCharCode(bytes[i]);
+                            binaryString += String.fromCharCode(bytes[i] & 0xFF);
                         }
                         setValue(binaryString);
                     }
@@ -293,7 +321,12 @@
                             for (let i = 0; i < byteLength; i++) {
                                 byteArray[i] = bytes[offset++];
                             }
-                            return Array.from(byteArray, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+                            // 바이너리 데이터를 바이너리 문자열로 변환 (JPG 등 바이너리 파일 보존)
+                            let binaryString = '';
+                            for (let i = 0; i < byteArray.length; i++) {
+                                binaryString += String.fromCharCode(byteArray[i] & 0xFF);
+                            }
+                            return binaryString;
                             
                         case 3: // text string
                             const textLength = readLength(additionalInfo);
@@ -428,9 +461,19 @@
                         return [0xFB, ...Array.from(new Uint8Array(buffer))];
                     }
                 } else if (typeof value === 'string') {
-                    // Text string (major type 3)
-                    const utf8Bytes = new TextEncoder().encode(value);
-                    return [...encodeLength(3, utf8Bytes.length), ...Array.from(utf8Bytes)];
+                    // 바이너리 데이터인지 확인 (JPG 등 이미지 파일 감지)
+                    if (isBinaryString(value, 0.1) || sniffImage(value)) {
+                        // 바이너리 데이터는 byte string (major type 2)으로 인코딩
+                        const binaryBytes = new Uint8Array(value.length);
+                        for (let i = 0; i < value.length; i++) {
+                            binaryBytes[i] = value.charCodeAt(i) & 0xFF;
+                        }
+                        return [...encodeLength(2, binaryBytes.length), ...Array.from(binaryBytes)];
+                    } else {
+                        // 일반 텍스트는 text string (major type 3)으로 인코딩
+                        const utf8Bytes = new TextEncoder().encode(value);
+                        return [...encodeLength(3, utf8Bytes.length), ...Array.from(utf8Bytes)];
+                    }
                 } else if (typeof value === 'boolean') {
                     // Simple value (major type 7)
                     return [value ? 0xF5 : 0xF4]; // true : false
@@ -2423,42 +2466,70 @@
         window.testImageCBOR = function(imageData) {
             console.log('=== 이미지 CBOR 테스트 시작 ===');
             console.log('이미지 데이터 길이:', imageData.length);
-            console.log('이미지 타입 감지:', sniffImage(imageData));
+            
+            // 이미지 타입 감지
+            const imageInfo = sniffImage(imageData);
+            console.log('이미지 타입 감지:', imageInfo);
             
             // CBOR 인코딩
+            console.log('CBOR 인코딩 시작...');
             const encodedCBOR = encodeCBOR(imageData);
-            console.log('CBOR 인코딩 결과 길이:', encodedCBOR.length);
+            console.log('CBOR 인코딩 완료. 결과 길이:', encodedCBOR.length);
             
             // 바이너리 문자열로 변환
             let binaryStr = '';
             for (let i = 0; i < encodedCBOR.length; i++) {
-                binaryStr += String.fromCharCode(encodedCBOR[i]);
+                binaryStr += String.fromCharCode(encodedCBOR[i] & 0xFF);
             }
+            console.log('바이너리 문자열 변환 완료. 길이:', binaryStr.length);
             
             // CBOR 디코딩 테스트
-            console.log('CBOR 디코딩 테스트...');
+            console.log('CBOR 디코딩 시작...');
             const decodedResult = decodeCBOR(binaryStr);
-            console.log('디코딩 결과:', decodedResult);
+            console.log('CBOR 디코딩 완료.');
             
             if (decodedResult) {
-                try {
-                    const parsed = JSON.parse(decodedResult);
-                    console.log('파싱된 결과 타입:', typeof parsed);
-                    if (typeof parsed === 'string') {
-                        console.log('결과 데이터 길이:', parsed.length);
-                        console.log('원본과 일치:', parsed === imageData);
-                        console.log('이미지 타입 재감지:', sniffImage(parsed));
+                console.log('디코딩 성공!');
+                console.log('디코딩된 데이터 길이:', decodedResult.length);
+                console.log('원본과 길이 비교:', imageData.length, '===', decodedResult.length);
+                
+                // 바이트 단위 비교
+                let identical = true;
+                const maxCheck = Math.min(imageData.length, decodedResult.length, 1000);
+                for (let i = 0; i < maxCheck; i++) {
+                    if (imageData.charCodeAt(i) !== decodedResult.charCodeAt(i)) {
+                        console.log(`바이트 차이 발견: 위치 ${i}, 원본: ${imageData.charCodeAt(i)}, 복원: ${decodedResult.charCodeAt(i)}`);
+                        identical = false;
+                        break;
                     }
-                } catch (e) {
-                    console.log('JSON 파싱 실패:', e.message);
                 }
+                
+                if (identical && imageData.length === decodedResult.length) {
+                    console.log('✅ 완벽하게 복원되었습니다!');
+                    // 복원된 이미지 타입 재확인
+                    const restoredImageInfo = sniffImage(decodedResult);
+                    console.log('복원된 이미지 타입:', restoredImageInfo);
+                } else {
+                    console.log('❌ 데이터가 정확히 복원되지 않았습니다.');
+                }
+                
+                return {
+                    success: identical && imageData.length === decodedResult.length,
+                    original: imageData,
+                    encoded: binaryStr,
+                    decoded: decodedResult,
+                    originalType: imageInfo,
+                    restoredType: sniffImage(decodedResult)
+                };
+            } else {
+                console.log('❌ CBOR 디코딩에 실패했습니다.');
+                return {
+                    success: false,
+                    original: imageData,
+                    encoded: binaryStr,
+                    decoded: null
+                };
             }
-            
-            return {
-                original: imageData,
-                encoded: binaryStr,
-                decoded: decodedResult
-            };
         };
         window.testHexToCBOR = function(hexString) {
             console.log('=== HEX → CBOR 테스트 시작 ===');
