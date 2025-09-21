@@ -155,7 +155,6 @@
                 URL.revokeObjectURL(url);
                 return true;
             } catch (error) {
-                console.error('Download error:', error);
                 return false;
             }
         }
@@ -180,7 +179,6 @@
                 URL.revokeObjectURL(url);
                 return true;
             } catch (error) {
-                console.error('Binary download error:', error);
                 return false;
             }
         }
@@ -249,18 +247,11 @@
             try {
                 if (!binaryStr) return null;
                 
-                console.log('CBOR decode - input length:', binaryStr.length);
-                console.log('CBOR decode - first 20 chars as hex:', 
-                    Array.from(binaryStr.slice(0, 20)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
-                
                 // 문자열을 바이트 배열로 변환
                 const bytes = new Uint8Array(binaryStr.length);
                 for (let i = 0; i < binaryStr.length; i++) {
                     bytes[i] = binaryStr.charCodeAt(i) & 0xFF; // 하위 8비트만 사용
                 }
-                
-                console.log('CBOR decode - converted bytes:', 
-                    Array.from(bytes.slice(0, 20)).map(b => b.toString(16).padStart(2, '0')).join(' '));
                 
                 let offset = 0;
                 
@@ -411,7 +402,6 @@
                 return JSON.stringify(result, null, 2);
                 
             } catch (error) {
-                console.error('CBOR decode error:', error.message);
                 return null;
             }
         }
@@ -511,25 +501,17 @@
         function isCBORData(binaryStr) {
             try {
                 if (!binaryStr || binaryStr.length === 0) {
-                    console.log('CBOR check - empty input');
                     return false;
                 }
-                
-                console.log('CBOR check - input length:', binaryStr.length);
-                console.log('CBOR check - input type:', typeof binaryStr);
                 
                 // 입력 데이터의 처음 몇 바이트를 16진수로 표시
                 const hexBytes = Array.from(binaryStr.slice(0, Math.min(20, binaryStr.length)))
                     .map(c => c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()).join(' ');
-                console.log('CBOR check - first bytes as hex:', hexBytes);
                 
                 // 첫 바이트에서 CBOR major type 추출
                 const firstByte = binaryStr.charCodeAt(0);
                 const majorType = (firstByte >> 5) & 0x07;
                 const additionalInfo = firstByte & 0x1F;
-                
-                console.log('CBOR check - first byte:', firstByte.toString(16).toUpperCase(), 
-                           'major type:', majorType, 'additional info:', additionalInfo);
                 
                 // CBOR의 일반적인 패턴 확인 (더 포괄적으로)
                 // Major type이 0-7 사이이면 유효한 CBOR 가능성 있음
@@ -543,15 +525,10 @@
                     (firstByte >= 0x40 && firstByte <= 0x57)    // byte strings (major type 2)
                 );
                 
-                console.log('CBOR check - potential CBOR:', isPotentialCBOR, 'definitely CBOR:', isDefinitelyCBOR);
-                
                 if (isPotentialCBOR || isDefinitelyCBOR) {
-                    console.log('CBOR check - attempting decode...');
                     // 실제 디코딩 시도
                     const result = decodeCBOR(binaryStr);
-                    console.log('CBOR check - decode result:', result ? 'SUCCESS' : 'FAILED');
                     if (result) {
-                        console.log('CBOR check - decoded content preview:', result.substring(0, 200));
                         return true;
                     }
                 }
@@ -559,18 +536,14 @@
                 // 특별한 경우: 유니코드 문자가 포함된 텍스트도 CBOR일 가능성 체크
                 // ¤ (0xA4)로 시작하는 경우 map with 4 items를 의미
                 if (binaryStr.charAt(0) === '¤') {
-                    console.log('CBOR check - detected map marker (¤), attempting decode...');
                     const result = decodeCBOR(binaryStr);
                     if (result) {
-                        console.log('CBOR check - successfully decoded map structure');
                         return true;
                     }
                 }
                 
-                console.log('CBOR check - not recognized as CBOR');
                 return false;
             } catch (e) {
-                console.log('CBOR check - error:', e.message);
                 return false;
             }
         }
@@ -801,14 +774,11 @@
                             data = input;
                         }
                         
-                        console.log('CBOR encode - input data:', data);
                         const bytes = encodeCBOR(data);
-                        console.log('CBOR encode - encoded bytes:', Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' '));
                         
                         // Binary 형태로 반환
                         return Array.from(bytes).map(b => String.fromCharCode(b)).join('');
                     } catch (e) {
-                        console.error('CBOR encode error:', e);
                         return '';
                     }
                 }
@@ -1051,9 +1021,7 @@
                 
                 // Plain Text fallback 전에 CBOR 가능성 체크
                 if (input && input.length > 0) {
-                    console.log('Detect - checking for CBOR before Plain Text fallback');
                     if (isCBORData(input)) {
-                        console.log('Detect - detected CBOR, treating as binary');
                         // CBOR로 인식된 경우 바이너리로 처리
                         return finalize(input, 'CBOR', input, true); // isBinary = true
                     }
@@ -1182,6 +1150,7 @@
                 // 메시지
                 copySuccess: "복사했습니다.",
                 copyError: "복사에 실패했습니다.",
+                binaryNotCopyable: "바이너리 데이터는 복사할 수 없습니다.",
                 downloadSuccess: "파일을 저장했습니다.",
                 downloadError: "파일 저장에 실패했습니다.",
                 pasteSuccess: "붙여넣기 완료",
@@ -1236,6 +1205,7 @@
                 // 메시지
                 copySuccess: "Copied to clipboard.",
                 copyError: "Failed to copy.",
+                binaryNotCopyable: "Binary data cannot be copied.",
                 downloadSuccess: "File saved successfully.",
                 downloadError: "Failed to save file.",
                 pasteSuccess: "Paste completed",
@@ -1400,7 +1370,6 @@
                                 
                                 // 파싱된 데이터가 문자열이고 바이너리처럼 보이면 바이너리로 처리
                                 if (typeof parsedData === 'string' && isBinaryString(parsedData, 0.1)) {
-                                    console.log('CBOR decoded to binary data, checking format...');
                                     setOutput(parsedData);
                                     setIsBinaryOutput(true);
                                     setIsCborResultBinary(true); // CBOR 결과가 바이너리임을 표시
@@ -1408,7 +1377,6 @@
                                     // 이미지 포맷인지 확인
                                     const imageInfo = sniffImage(parsedData);
                                     if (imageInfo) {
-                                        console.log('CBOR decoded to image:', imageInfo);
                                         // 인코딩 타입을 이미지 포맷으로 업데이트
                                         setEncoding(`${result.encoding.split('-')[0]}-CBOR-${imageInfo.ext.toUpperCase()}`);
                                     }
@@ -1809,12 +1777,15 @@
                                                 startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                 onClick: async () => {
                                                     if (!output) return;
+                                                    
+                                                    // 바이너리 데이터 검사
+                                                    if (isBinaryOutput || isBinaryString(output, 0.1)) {
+                                                        showToast(t('binaryNotCopyable'), 'error');
+                                                        return;
+                                                    }
+                                                    
                                                     try {
-                                                        if (isBinaryOutput) {
-                                                            await navigator.clipboard.writeText(output); // 바이너리 데이터 자체 복사
-                                                        } else {
-                                                            await navigator.clipboard.writeText(output);
-                                                        }
+                                                        await navigator.clipboard.writeText(output);
                                                         showToast(t('copySuccess'), 'success');
                                                     } catch {
                                                         showToast(t('copyError'), 'error');
@@ -2011,8 +1982,8 @@
                                 // beautify / syntax checks 그대로
                                 renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine),
 
-                                // CBOR 디코딩 결과 (바이너리 데이터가 CBOR인 경우, 단 결과가 바이너리가 아닌 경우만)
-                                isCborData && cborOutput && !isCborResultBinary && React.createElement(Box, { sx: { mt: 2 } },
+                                // CBOR 디코딩 결과 (바이너리 데이터가 CBOR인 경우, 단 결과가 바이너리가 아니고 이미지가 아닌 경우만)
+                                isCborData && cborOutput && !isCborResultBinary && !sniffImage(output) && !sniffImage(cborOutput) && React.createElement(Box, { sx: { mt: 2 } },
                                     React.createElement(Typography, { variant: "subtitle1", sx: { mb: 1, fontWeight: 'bold' } },
                                         t('cborDecoded')
                                     ),
@@ -2269,6 +2240,13 @@
                                                 startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                 onClick: async () => {
                                                     if (!encodeResult) return;
+                                                    
+                                                    // 바이너리 데이터 검사
+                                                    if (isBinaryString(encodeResult, 0.1)) {
+                                                        showToast(t('binaryNotCopyable'), 'error');
+                                                        return;
+                                                    }
+                                                    
                                                     try {
                                                         await navigator.clipboard.writeText(encodeResult);
                                                         showToast(t('copySuccess'), 'success');
@@ -2442,141 +2420,7 @@
             bytes.forEach(b => binary += String.fromCharCode(b));
             return btoa(binary);
         }
-
-        // 테스트 함수 - 개발자 도구 콘솔에서 사용
-        window.testCBORData = function(data) {
-            console.log('=== CBOR 테스트 시작 ===');
-            console.log('입력 데이터:', data);
-            console.log('데이터 길이:', data.length);
-            
-            const isCbor = isCBORData(data);
-            console.log('CBOR 인식 결과:', isCbor);
-            
-            if (isCbor) {
-                const decoded = decodeCBOR(data);
-                console.log('디코딩 결과:', decoded);
-                return decoded;
-            } else {
-                console.log('CBOR로 인식되지 않았습니다.');
-                return null;
-            }
-        };
-
-        // 이미지 CBOR 테스트 함수
-        window.testImageCBOR = function(imageData) {
-            console.log('=== 이미지 CBOR 테스트 시작 ===');
-            console.log('이미지 데이터 길이:', imageData.length);
-            
-            // 이미지 타입 감지
-            const imageInfo = sniffImage(imageData);
-            console.log('이미지 타입 감지:', imageInfo);
-            
-            // CBOR 인코딩
-            console.log('CBOR 인코딩 시작...');
-            const encodedCBOR = encodeCBOR(imageData);
-            console.log('CBOR 인코딩 완료. 결과 길이:', encodedCBOR.length);
-            
-            // 바이너리 문자열로 변환
-            let binaryStr = '';
-            for (let i = 0; i < encodedCBOR.length; i++) {
-                binaryStr += String.fromCharCode(encodedCBOR[i] & 0xFF);
-            }
-            console.log('바이너리 문자열 변환 완료. 길이:', binaryStr.length);
-            
-            // CBOR 디코딩 테스트
-            console.log('CBOR 디코딩 시작...');
-            const decodedResult = decodeCBOR(binaryStr);
-            console.log('CBOR 디코딩 완료.');
-            
-            if (decodedResult) {
-                console.log('디코딩 성공!');
-                console.log('디코딩된 데이터 길이:', decodedResult.length);
-                console.log('원본과 길이 비교:', imageData.length, '===', decodedResult.length);
-                
-                // 바이트 단위 비교
-                let identical = true;
-                const maxCheck = Math.min(imageData.length, decodedResult.length, 1000);
-                for (let i = 0; i < maxCheck; i++) {
-                    if (imageData.charCodeAt(i) !== decodedResult.charCodeAt(i)) {
-                        console.log(`바이트 차이 발견: 위치 ${i}, 원본: ${imageData.charCodeAt(i)}, 복원: ${decodedResult.charCodeAt(i)}`);
-                        identical = false;
-                        break;
-                    }
-                }
-                
-                if (identical && imageData.length === decodedResult.length) {
-                    console.log('✅ 완벽하게 복원되었습니다!');
-                    // 복원된 이미지 타입 재확인
-                    const restoredImageInfo = sniffImage(decodedResult);
-                    console.log('복원된 이미지 타입:', restoredImageInfo);
-                } else {
-                    console.log('❌ 데이터가 정확히 복원되지 않았습니다.');
-                }
-                
-                return {
-                    success: identical && imageData.length === decodedResult.length,
-                    original: imageData,
-                    encoded: binaryStr,
-                    decoded: decodedResult,
-                    originalType: imageInfo,
-                    restoredType: sniffImage(decodedResult)
-                };
-            } else {
-                console.log('❌ CBOR 디코딩에 실패했습니다.');
-                return {
-                    success: false,
-                    original: imageData,
-                    encoded: binaryStr,
-                    decoded: null
-                };
-            }
-        };
-        window.testHexToCBOR = function(hexString) {
-            console.log('=== HEX → CBOR 테스트 시작 ===');
-            console.log('HEX 입력:', hexString);
-            
-            // 공백 제거하고 HEX 디코딩
-            const cleanHex = hexString.replace(/\s/g, '');
-            if (!/^([0-9a-fA-F]{2})+$/.test(cleanHex)) {
-                console.log('잘못된 HEX 형식입니다.');
-                return null;
-            }
-            
-            // HEX를 바이너리 문자열로 변환
-            let binaryStr = '';
-            for (let i = 0; i < cleanHex.length; i += 2) {
-                const byte = parseInt(cleanHex.substr(i, 2), 16);
-                binaryStr += String.fromCharCode(byte);
-            }
-            
-            console.log('변환된 바이너리 길이:', binaryStr.length);
-            console.log('첫 10바이트 HEX:', Array.from(binaryStr.slice(0, 10)).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' '));
-            
-            // CBOR 디코딩 테스트
-            const result = window.testCBORData(binaryStr);
-            return result;
-        };
-
-        // 페이지 로드 후 자동으로 제공된 CBOR 데이터 테스트
-        window.addEventListener('load', function() {
-            setTimeout(function() {
-                console.log('=== 자동 HEX CBOR 테스트 ===');
-                const testHexData = 'A4 64 6E 61 6D 65 66 EC B2 A0 ED 98 B8 63 61 67 65 18 1E 64 63 69 74 79 66 EA B5 AC EB AF B8 67 68 6F 62 62 69 65 73 83 66 EB 8F 85 EC 84 9C 66 EB 93 B1 EC 82 B0 66 EC 9A 94 EB A6 AC';
-                window.testHexToCBOR(testHexData);
-                
-                console.log('=== 자동 바이너리 CBOR 테스트 ===');
-                // HEX 데이터를 바이너리 문자열로 변환
-                const cleanHex = testHexData.replace(/\s/g, '');
-                let binaryStr = '';
-                for (let i = 0; i < cleanHex.length; i += 2) {
-                    const byte = parseInt(cleanHex.substr(i, 2), 16);
-                    binaryStr += String.fromCharCode(byte);
-                }
-                console.log('바이너리 문자열 길이:', binaryStr.length);
-                console.log('바이너리 문자열 미리보기:', binaryStr.substring(0, 20));
-                window.testCBORData(binaryStr);
-            }, 1000);
-        });
     </script>
 </body>
+</html>
 </html>
