@@ -557,10 +557,75 @@
         // Codec 전략 (객체지향 구조)
         // -------------------------
         const Codecs = (() => {
+            // 바이너리 포맷 감지 함수
+            function detectBinaryFormat(binaryStr) {
+                if (!binaryStr || binaryStr.length < 4) return null;
+                
+                const bytes = Array.from(binaryStr).map(c => c.charCodeAt(0));
+                
+                // 이미지 포맷 감지
+                if (bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF) {
+                    return 'JPEG';
+                }
+                if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47) {
+                    return 'PNG';
+                }
+                if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) {
+                    return 'GIF';
+                }
+                if ((bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) ||
+                    (bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50)) {
+                    return 'WebP';
+                }
+                if (bytes[0] === 0x42 && bytes[1] === 0x4D) {
+                    return 'BMP';
+                }
+                
+                // 아카이브 포맷
+                if (bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04) {
+                    return 'ZIP';
+                }
+                if (bytes[0] === 0x1F && bytes[1] === 0x8B) {
+                    return 'GZIP';
+                }
+                if (bytes[0] === 0x75 && bytes[1] === 0x73 && bytes[2] === 0x74 && bytes[3] === 0x61) {
+                    return 'TAR';
+                }
+                
+                // PDF
+                if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+                    return 'PDF';
+                }
+                
+                // 실행 파일
+                if (bytes[0] === 0x4D && bytes[1] === 0x5A) {
+                    return 'EXE';
+                }
+                if (bytes[0] === 0x7F && bytes[1] === 0x45 && bytes[2] === 0x4C && bytes[3] === 0x46) {
+                    return 'ELF';
+                }
+                
+                // 기타 바이너리 포맷
+                if (bytes[0] === 0x00 && bytes[1] === 0x00 && bytes[2] === 0x01 && bytes[3] === 0x00) {
+                    return 'ICO';
+                }
+                
+                return null;
+            }
+
             // 공통 finalize
             function finalize(decoded, encoding, input, forceBinary = false) {
                 const res = { decoded, encoding, error: null, isBinary: false, matched: true };
                 res.isBinary = forceBinary || isBinaryString(res.decoded, 0.2);
+                
+                // 바이너리 데이터인 경우 포맷 감지
+                if (res.isBinary) {
+                    const binaryFormat = detectBinaryFormat(res.decoded);
+                    if (binaryFormat) {
+                        res.encoding = `${encoding}-${binaryFormat}`;
+                    }
+                }
+                
                 // 디코딩 불가 케이스(텍스트성 인코딩으로 판단되었지만 의미 없는 결과)
                 if (
                     input &&
@@ -1189,11 +1254,16 @@
                 setIsBinaryOutput(result.isBinary || false);
                 
                 // CBOR 디코딩 처리 (Hex 디코딩 결과에 대해 특별 처리)
-                if (result.decoded && (result.encoding === 'Hex' || result.isBinary)) {
+                if (result.decoded && (result.encoding.includes('Hex') || result.encoding.includes('Base64') || result.isBinary)) {
                     const isCbor = isCBORData(result.decoded);
                     setIsCborData(isCbor);
                     
                     if (isCbor) {
+                        // CBOR로 인식된 경우 인코딩 이름에 CBOR 추가
+                        if (!result.encoding.includes('CBOR')) {
+                            const baseEncoding = result.encoding.split('-')[0]; // Hex-JPEG에서 Hex만 추출
+                            setEncoding(`${baseEncoding}-CBOR`);
+                        }
                         const cborDecoded = decodeCBOR(result.decoded);
                         setCborOutput(cborDecoded || '');
                     } else {
