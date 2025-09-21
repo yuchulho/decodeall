@@ -676,8 +676,8 @@
                 const res = { decoded, encoding, error: null, isBinary: false, matched: true };
                 res.isBinary = forceBinary || isBinaryString(res.decoded, 0.2);
                 
-                // 바이너리 데이터인 경우 포맷 감지
-                if (res.isBinary) {
+                // 바이너리 데이터인 경우 포맷 감지 (CBOR는 제외)
+                if (res.isBinary && !encoding.includes('CBOR')) {
                     const binaryFormat = detectBinaryFormat(res.decoded);
                     if (binaryFormat) {
                         res.encoding = `${encoding}-${binaryFormat}`;
@@ -1252,6 +1252,7 @@
             // CBOR 디코딩 상태
             const [cborOutput, setCborOutput] = useState('');
             const [isCborData, setIsCborData] = useState(false);
+            const [isCborResultBinary, setIsCborResultBinary] = useState(false);
 
             const inputRef = useRef(null);
             const outputRef = useRef(null);
@@ -1319,6 +1320,7 @@
                     setSyntaxError(null);
                     setSyntaxErrorLine(null);
                     setIsBinaryOutput(false);
+                    setIsCborResultBinary(false);
                     return;
                 }
 
@@ -1347,13 +1349,42 @@
                         const cborDecoded = decodeCBOR(result.decoded);
                         setCborOutput(cborDecoded || '');
                         
-                        // CBOR 디코딩 결과를 메인 출력에 표시 (바이너리여도 JSON 텍스트로 표시)
+                        // CBOR 디코딩 결과 처리
                         if (cborDecoded) {
-                            setOutput(cborDecoded);
-                            setIsBinaryOutput(false); // CBOR 디코딩 결과는 텍스트로 표시
+                            try {
+                                // JSON 파싱을 시도해서 바이너리 데이터인지 확인
+                                const parsedData = JSON.parse(cborDecoded);
+                                
+                                // 파싱된 데이터가 문자열이고 바이너리처럼 보이면 바이너리로 처리
+                                if (typeof parsedData === 'string' && isBinaryString(parsedData, 0.1)) {
+                                    console.log('CBOR decoded to binary data, checking format...');
+                                    setOutput(parsedData);
+                                    setIsBinaryOutput(true);
+                                    setIsCborResultBinary(true); // CBOR 결과가 바이너리임을 표시
+                                    
+                                    // 이미지 포맷인지 확인
+                                    const imageInfo = sniffImage(parsedData);
+                                    if (imageInfo) {
+                                        console.log('CBOR decoded to image:', imageInfo);
+                                        // 인코딩 타입을 이미지 포맷으로 업데이트
+                                        setEncoding(`${result.encoding.split('-')[0]}-CBOR-${imageInfo.ext.toUpperCase()}`);
+                                    }
+                                } else {
+                                    // JSON 데이터인 경우 텍스트로 표시
+                                    setOutput(cborDecoded);
+                                    setIsBinaryOutput(false);
+                                    setIsCborResultBinary(false); // CBOR 결과가 텍스트임을 표시
+                                }
+                            } catch (e) {
+                                // JSON 파싱 실패 시 텍스트로 처리
+                                setOutput(cborDecoded);
+                                setIsBinaryOutput(false);
+                                setIsCborResultBinary(false);
+                            }
                         }
                     } else {
                         setCborOutput('');
+                        setIsCborResultBinary(false);
                         // CBOR이 아닌 바이너리 데이터는 바이너리 자체로 표시
                         if (result.isBinary) {
                             setIsBinaryOutput(true);
@@ -1362,6 +1393,7 @@
                 } else {
                     setIsCborData(false);
                     setCborOutput('');
+                    setIsCborResultBinary(false);
                 }
 
                 // Beautify & syntax check for JSON/XML
@@ -1936,8 +1968,8 @@
                                 // beautify / syntax checks 그대로
                                 renderBeautifiedWithError(beautified, syntaxType, syntaxErrorLine),
 
-                                // CBOR 디코딩 결과 (바이너리 데이터가 CBOR인 경우)
-                                isCborData && cborOutput && React.createElement(Box, { sx: { mt: 2 } },
+                                // CBOR 디코딩 결과 (바이너리 데이터가 CBOR인 경우, 단 결과가 바이너리가 아닌 경우만)
+                                isCborData && cborOutput && !isCborResultBinary && React.createElement(Box, { sx: { mt: 2 } },
                                     React.createElement(Typography, { variant: "subtitle1", sx: { mb: 1, fontWeight: 'bold' } },
                                         t('cborDecoded')
                                     ),
@@ -2387,7 +2419,47 @@
             }
         };
 
-        // HEX 문자열을 바이너리 문자열로 변환하는 테스트 함수
+        // 이미지 CBOR 테스트 함수
+        window.testImageCBOR = function(imageData) {
+            console.log('=== 이미지 CBOR 테스트 시작 ===');
+            console.log('이미지 데이터 길이:', imageData.length);
+            console.log('이미지 타입 감지:', sniffImage(imageData));
+            
+            // CBOR 인코딩
+            const encodedCBOR = encodeCBOR(imageData);
+            console.log('CBOR 인코딩 결과 길이:', encodedCBOR.length);
+            
+            // 바이너리 문자열로 변환
+            let binaryStr = '';
+            for (let i = 0; i < encodedCBOR.length; i++) {
+                binaryStr += String.fromCharCode(encodedCBOR[i]);
+            }
+            
+            // CBOR 디코딩 테스트
+            console.log('CBOR 디코딩 테스트...');
+            const decodedResult = decodeCBOR(binaryStr);
+            console.log('디코딩 결과:', decodedResult);
+            
+            if (decodedResult) {
+                try {
+                    const parsed = JSON.parse(decodedResult);
+                    console.log('파싱된 결과 타입:', typeof parsed);
+                    if (typeof parsed === 'string') {
+                        console.log('결과 데이터 길이:', parsed.length);
+                        console.log('원본과 일치:', parsed === imageData);
+                        console.log('이미지 타입 재감지:', sniffImage(parsed));
+                    }
+                } catch (e) {
+                    console.log('JSON 파싱 실패:', e.message);
+                }
+            }
+            
+            return {
+                original: imageData,
+                encoded: binaryStr,
+                decoded: decodedResult
+            };
+        };
         window.testHexToCBOR = function(hexString) {
             console.log('=== HEX → CBOR 테스트 시작 ===');
             console.log('HEX 입력:', hexString);
