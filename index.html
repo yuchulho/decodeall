@@ -134,6 +134,33 @@
                 }
             }
         }
+        
+        // 파일 선택 함수
+        function handleFileSelect(setValue) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '*/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.type.startsWith('text/')) {
+                        const text = await file.text();
+                        setValue(text);
+                    } else {
+                        // 바이너리 파일: 바이너리 문자열 로딩
+                        const arrayBuffer = await file.arrayBuffer();
+                        const bytes = new Uint8Array(arrayBuffer);
+                        let binaryString = '';
+                        for (let i = 0; i < bytes.length; ++i) {
+                            binaryString += String.fromCharCode(bytes[i]);
+                        }
+                        setValue(binaryString);
+                    }
+                }
+            };
+            input.click();
+        }
+        
         // 이미지 판별 및 Data URL 생성
         function sniffImage(binaryStr) {
             if (!binaryStr) return null;
@@ -594,7 +621,7 @@
                 
                 // 디코더 섹션
                 inputLabel: "디코딩할 텍스트 입력",
-                inputPlaceholder: "Base64, URL, Hex 등 인코딩된 텍스트를 입력하세요...",
+                inputPlaceholder: "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
                 outputLabel: "디코딩 결과",
                 encodingTypeLabel: "감지된 인코딩",
                 beautifyLabel: "Beautify",
@@ -603,7 +630,7 @@
                 
                 // 인코더 섹션
                 encodeInputLabel: "인코딩할 텍스트 입력",
-                encodeInputPlaceholder: "인코딩할 텍스트를 입력하세요...",
+                encodeInputPlaceholder: "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
                 encodeResultLabel: "인코딩 결과",
                 algorithmDescription: "알고리즘 설명",
                 
@@ -624,7 +651,8 @@
                 dragDropHint: "드래그앤드롭한 파일 및 텍스트 모두 동일하게 로컬에서만 처리됩니다.",
                 privacyNote: "입력값은 브라우저에서만 처리되며 저장되지 않습니다.",
                 supportedEncodings: "지원 인코딩",
-                decodeDescription: "아래 입력창에 어떤 인코딩이든 텍스트를 넣거나 파일을 드래그앤드롭하면 자동으로 인코딩을 감지하고 디코딩 결과를 보여줍니다.",
+                decodeDescription: "자동 디코더가 입력된 텍스트의 인코딩 방식을 감지하여 원본 텍스트로 복원합니다.",
+                encodeDescription: "다양한 알고리즘을 선택하여 텍스트를 원하는 방식으로 인코딩할 수 있습니다.",
                 cannotDecode: "디코딩할 수 없는 데이터입니다.",
                 noData: "디코딩할 데이터가 없습니다.",
                 
@@ -643,7 +671,7 @@
                 
                 // 디코더 섹션
                 inputLabel: "Input text to decode",
-                inputPlaceholder: "Enter encoded text like Base64, URL, Hex...",
+                inputPlaceholder: "Direct input | Drag & drop | File load button - Enter your text...",
                 outputLabel: "Decoding result",
                 encodingTypeLabel: "Detected encoding",
                 beautifyLabel: "Beautify",
@@ -652,7 +680,7 @@
                 
                 // 인코더 섹션
                 encodeInputLabel: "Input text to encode",
-                encodeInputPlaceholder: "Enter text to encode...",
+                encodeInputPlaceholder: "Direct input | Drag & drop | File load button - Enter your text...",
                 encodeResultLabel: "Encoding result",
                 algorithmDescription: "Algorithm description",
                 
@@ -673,7 +701,8 @@
                 dragDropHint: "Drag and drop files are also processed locally only.",
                 privacyNote: "Input is processed only in browser and not stored.",
                 supportedEncodings: "Supported Encodings",
-                decodeDescription: "Enter any encoded text or drag and drop files into the input field below, and it will automatically detect the encoding and show the decoding result.",
+                decodeDescription: "Auto decoder detects the encoding method of input text and restores it to original text.",
+                encodeDescription: "You can select various algorithms to encode text in your desired format.",
                 cannotDecode: "Cannot decode the data.",
                 noData: "No data to decode.",
                 
@@ -1017,8 +1046,19 @@
                                 React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
                                     t('decodeDescription')
                                 ),
-                                // 입력 초기화 버튼
-                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1 } },
+                                // 입력 초기화 및 파일 로드 버튼
+                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 } },
+                                    React.createElement(
+                                        MaterialUI.Button,
+                                        {
+                                            variant: "outlined",
+                                            color: "primary",
+                                            size: "small",
+                                            startIcon: React.createElement("span", { className: "material-icons" }, "upload_file"),
+                                            onClick: () => handleFileSelect(setInput)
+                                        },
+                                        "파일 로드"
+                                    ),
                                     React.createElement(
                                         MaterialUI.Button,
                                         {
@@ -1040,7 +1080,7 @@
                                     onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(false); }
                                 },
                                     React.createElement(TextField, {
-                                        label: "인코딩된 텍스트 입력 (Base64, URL, Hex, HTML Entity, Unicode, Quoted-Printable 등)",
+                                        label: "인코딩된 텍스트 입력",
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
@@ -1290,10 +1330,21 @@
                             // ----------------- 인코딩 탭 -----------------
                             tab === 1 && React.createElement(Box, null,
                                 React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
-                                    "아래 입력창에 텍스트를 입력하고, 원하는 인코딩 방식을 선택하면 인코딩 결과가 바로 표시됩니다."
+                                    t('encodeDescription')
                                 ),
-                                // 입력 초기화 버튼
-                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1 } },
+                                // 입력 초기화 및 파일 로드 버튼
+                                React.createElement(Box, { sx: { textAlign: 'right', mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 } },
+                                    React.createElement(
+                                        MaterialUI.Button,
+                                        {
+                                            variant: "outlined",
+                                            color: "primary",
+                                            size: "small",
+                                            startIcon: React.createElement("span", { className: "material-icons" }, "upload_file"),
+                                            onClick: () => handleFileSelect(setEncodeInput)
+                                        },
+                                        "파일 로드"
+                                    ),
                                     React.createElement(
                                         MaterialUI.Button,
                                         {
