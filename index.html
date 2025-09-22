@@ -253,7 +253,7 @@
                 }
                 
                 // cbor-js 라이브러리 사용
-                if (typeof CBOR === 'undefined' || !CBOR.decode) {
+                if (typeof window.CBOR === 'undefined' || !window.CBOR.decode) {
                     console.error("decodeCBOR: cbor-js 라이브러리를 찾을 수 없음");
                     return "CBOR 라이브러리가 로드되지 않았습니다. 페이지를 새로고침해보세요.";
                 }
@@ -266,9 +266,17 @@
                 // Uint8Array의 buffer 속성을 사용하여 ArrayBuffer 전달
                 // slice()를 사용하여 새로운 ArrayBuffer 생성 (cbor-js 호환성을 위해)
                 const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-                const decoded = CBOR.decode(arrayBuffer);
-                console.log("decodeCBOR: CBOR 디코딩 성공:", decoded);
+                const decoded = window.CBOR.decode(arrayBuffer);
+                console.log("decodeCBOR: CBOR 디코딩 성공, 타입:", typeof decoded, 
+                    decoded instanceof Uint8Array ? "Uint8Array" : "");
                 
+                // 디코딩 결과가 Uint8Array인 경우 (바이너리 데이터) 바이너리 문자열로 변환
+                if (decoded instanceof Uint8Array) {
+                    console.log("decodeCBOR: Uint8Array를 바이너리 문자열로 변환");
+                    return uint8ToBinString(decoded);
+                }
+                
+                // 일반 객체/배열/문자열인 경우 JSON으로 변환
                 return JSON.stringify(decoded, null, 2);
                 
             } catch (error) {
@@ -281,28 +289,43 @@
         function encodeCBOR(data) {
             try {
                 // cbor-js 라이브러리 사용
-                if (typeof CBOR === 'undefined' || !CBOR.encode) {
+                if (typeof window.CBOR === 'undefined' || !window.CBOR.encode) {
                     throw new Error("CBOR 라이브러리가 로드되지 않았습니다.");
                 }
                 
-                // JSON 문자열을 파싱하여 객체로 변환
+                // 데이터 타입에 따른 처리
                 let parsedData;
                 if (typeof data === 'string') {
-                    try {
-                        parsedData = JSON.parse(data);
-                    } catch (e) {
-                        // JSON이 아닌 단순 문자열로 처리
-                        parsedData = data;
+                    // 바이너리 문자열인지 확인 (이미지 등)
+                    if (isBinaryString(data, 0.1)) {
+                        console.log("encodeCBOR: 바이너리 문자열을 Uint8Array로 변환");
+                        // 바이너리 문자열을 Uint8Array로 변환
+                        parsedData = binStringToUint8(data);
+                    } else {
+                        // 일반 텍스트 문자열 - JSON 파싱 시도
+                        try {
+                            parsedData = JSON.parse(data);
+                            console.log("encodeCBOR: JSON 파싱 성공");
+                        } catch (e) {
+                            // JSON이 아닌 단순 문자열로 처리
+                            parsedData = data;
+                            console.log("encodeCBOR: 단순 문자열로 처리");
+                        }
                     }
                 } else {
                     parsedData = data;
                 }
                 
+                console.log("encodeCBOR: 인코딩할 데이터 타입:", typeof parsedData, 
+                    parsedData instanceof Uint8Array ? "Uint8Array" : "");
+                
                 // cbor-js를 사용하여 인코딩
-                const encoded = CBOR.encode(parsedData);
+                const encoded = window.CBOR.encode(parsedData);
                 
                 // ArrayBuffer를 Uint8Array로 변환
                 const uint8Array = new Uint8Array(encoded);
+                
+                console.log("encodeCBOR: 인코딩 완료, 결과 길이:", uint8Array.length);
                 
                 return uint8Array;
                 
@@ -312,7 +335,7 @@
             }
         }
 
-        // CBOR 데이터인지 확인하는 함수 (cbor-js 라이브러리 사용)
+        // CBOR 데이터인지 확인하는 함수 (cbor-js 라이브러리 활용)
         function isCBORData(binaryStr) {
             console.log("isCBORData: 진입. 데이터 길이:", binaryStr ? binaryStr.length : 0);
             
@@ -321,48 +344,32 @@
                 return false;
             }
             
-            // 1. CBOR 구조적 특성 검사 (라이브러리 없이도 기본 감지 가능)
-            const bytes = Array.from(binaryStr).map(c => c.charCodeAt(0));
-            console.log("isCBORData: 바이트 배열 처음 10개:", bytes.slice(0, 10));
-            
-            if (bytes.length === 0) return false;
-            
-            // CBOR의 첫 바이트에서 Major Type 추출
-            const firstByte = bytes[0];
-            const majorType = (firstByte >> 5) & 0x07; // 상위 3비트
-            const additionalInfo = firstByte & 0x1F;   // 하위 5비트
-            
-            console.log("isCBORData: 첫 바이트:", firstByte.toString(16), "Major Type:", majorType, "Additional Info:", additionalInfo);
-            
-            // 유효한 CBOR Major Type인지 확인 (0-7)
-            if (majorType > 7) {
-                console.log("isCBORData: 유효하지 않은 Major Type");
+            // cbor-js 라이브러리 확인
+            if (typeof window.CBOR === 'undefined' || !window.CBOR.decode) {
+                console.log("isCBORData: CBOR 라이브러리가 없어 false 반환");
                 return false;
             }
             
-            // 2. cbor-js 라이브러리로 정확한 검증 (가능한 경우)
             try {
-                // cbor-js 라이브러리 확인
-                if (typeof CBOR === 'undefined' || !CBOR.decode) {
-                    console.log("isCBORData: CBOR 라이브러리가 없지만 구조적 검증 통과로 true 반환");
-                    return true; // 구조적 검증만으로도 충분히 신뢰할 수 있음
-                }
-                
                 // 바이너리 문자열을 Uint8Array로 변환
                 const uint8Bytes = binStringToUint8(binaryStr);
-                console.log("isCBORData: Uint8Array로 변환된 바이트:", uint8Bytes.slice(0, 10));
+                console.log("isCBORData: Uint8Array로 변환된 바이트 (처음 10개):", Array.from(uint8Bytes.slice(0, 10)));
 
-                // cbor-js로 직접 디코딩 시도
-                // Uint8Array의 buffer 속성을 사용하여 ArrayBuffer 전달
+                // cbor-js로 디코딩 시도 - 성공하면 유효한 CBOR 데이터
                 const arrayBuffer = uint8Bytes.buffer.slice(uint8Bytes.byteOffset, uint8Bytes.byteOffset + uint8Bytes.byteLength);
-                const decoded = CBOR.decode(arrayBuffer);
+                const decoded = window.CBOR.decode(arrayBuffer);
                 
-                console.log("isCBORData: CBOR.decode 성공. 디코딩 결과:", decoded);
+                console.log("isCBORData: CBOR.decode 성공. 디코딩 결과 타입:", typeof decoded, 
+                    decoded instanceof Uint8Array ? "(Uint8Array)" : "");
+                console.log("isCBORData: 디코딩 결과 (일부):", 
+                    typeof decoded === 'string' ? decoded.slice(0, 50) : 
+                    decoded instanceof Uint8Array ? `Uint8Array[${decoded.length}]` :
+                    JSON.stringify(decoded).slice(0, 100));
+                
                 return true;
             } catch (e) {
-                console.log("isCBORData: CBOR.decode 실패하지만 구조적 검증은 통과. 오류:", e.message);
-                // 라이브러리 디코딩이 실패해도 구조적 검증을 통과했다면 CBOR일 가능성 높음
-                return true;
+                console.log("isCBORData: CBOR.decode 실패. 유효하지 않은 CBOR 데이터. 오류:", e.message);
+                return false;
             }
         }
         
@@ -535,12 +542,49 @@
                 label: 'CBOR',
                 description: "CBOR(Concise Binary Object Representation)은 JSON과 유사한 이진 직렬화 포맷입니다. 바이너리·Base64로 전달된 데이터를 구조화된 값으로 복원합니다.",
                 detect(input) {
+                    console.log("CBOR detect 호출됨. 입력:", input, "길이:", input ? input.length : 0);
                     try {
-                        if (typeof CBOR === 'undefined' || !CBOR.decode) return { matched: false };
+                        // 전역 CBOR 라이브러리 명시적 참조
+                        if (typeof window.CBOR === 'undefined' || !window.CBOR.decode) {
+                            console.log("CBOR detect: CBOR 라이브러리 없음");
+                            return { matched: false };
+                        }
                         const s = input || '';
-                        if (!s) return { matched: false };
+                        if (!s) {
+                            console.log("CBOR detect: 빈 입력");
+                            return { matched: false };
+                        }
 
-                        // 시도 조건: 명백한 Base64이거나, 바이너리스러운 문자열일 때만
+                        // 1. 먼저 CBOR 구조적 특성 검사
+                        console.log("CBOR detect: isCBORData 호출 시작");
+                        if (isCBORData(s)) {
+                            console.log("CBOR 디코더: isCBORData로 CBOR 데이터 확인됨");
+                            // CBOR 데이터로 확인된 경우 바로 디코딩 시도
+                            const bytes = binStringToUint8(s);
+                            const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+                            const value = window.CBOR.decode(arrayBuffer);
+
+                            // 결과를 문자열로 변환
+                            let out;
+                            if (typeof value === 'string') {
+                                out = value;
+                            } else if (value instanceof Uint8Array) {
+                                // 원시 바이트: 바이너리 문자열로 전달하여 HEX 뷰 제공
+                                out = uint8ToBinString(value);
+                            } else {
+                                try {
+                                    out = JSON.stringify(value);
+                                } catch {
+                                    out = String(value);
+                                }
+                            }
+                            console.log("CBOR 디코더: 디코딩 성공, 결과:", out);
+                            return finalize(out, this.label, input, false); // forceBinary = false (텍스트 결과이므로)
+                        } else {
+                            console.log("CBOR detect: isCBORData가 false 반환");
+                        }
+
+                        // 2. Base64 형태로 인코딩된 CBOR 데이터 검사
                         const looksBase64 = /^[A-Za-z0-9+/=\s]+$/.test(s) && s.replace(/\s/g, '').length % 4 === 0 && s.replace(/\s/g, '').length >= 8;
                         const looksBinary = isBinaryString(s, 0.05);
 
@@ -560,7 +604,7 @@
 
                         // 디코드 시도 - ArrayBuffer로 변환
                         const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-                        const value = CBOR.decode(arrayBuffer);
+                        const value = window.CBOR.decode(arrayBuffer);
 
                         // 결과를 문자열로 변환
                         let out;
@@ -1293,7 +1337,7 @@
                 
                 try {
                     // cbor-js 라이브러리 확인
-                    if (typeof CBOR === 'undefined' || !CBOR.decode) {
+                    if (typeof window.CBOR === 'undefined' || !window.CBOR.decode) {
                         console.error("toCborDiagnostic: cbor-js 라이브러리를 찾을 수 없습니다");
                         return "CBOR 라이브러리를 찾을 수 없습니다. 페이지를 새로고침해보세요.";
                     }
@@ -1302,7 +1346,7 @@
                     
                     // CBOR 디코딩 - Uint8Array를 ArrayBuffer로 변환
                     const arrayBuffer = cborBytes.buffer.slice(cborBytes.byteOffset, cborBytes.byteOffset + cborBytes.byteLength);
-                    const decoded = CBOR.decode(arrayBuffer);
+                    const decoded = window.CBOR.decode(arrayBuffer);
                     console.log("toCborDiagnostic: 디코딩 성공:", decoded);
                     
                     // 진단 표기법으로 포맷팅
@@ -1401,6 +1445,24 @@
                 
                 setOutput(decodedResult.decoded);
                 setEncoding(decodedResult.encoding);
+
+                // --- CBOR 특별 처리 ---
+                if (decodedResult.encoding === 'CBOR') {
+                    console.log("Pipeline: CBOR 디코딩 완료, 결과를 메인 출력으로 설정");
+                    setBinaryFormat('cbor');
+                    setDataFormat('text'); // 디코딩된 결과가 텍스트인 경우
+                    
+                    // CBOR 진단 정보도 설정
+                    try {
+                        const cborBytes = binStringToUint8(input);
+                        const diagnostic = toCborDiagnostic(cborBytes);
+                        setCborDiagnostic(diagnostic);
+                    } catch (e) {
+                        console.log("CBOR 진단 정보 생성 실패:", e.message);
+                    }
+                    
+                    return; // CBOR 처리 완료, 추가 포맷 판별 불필요
+                }
 
                 // --- 2. 데이터 포맷 판별 (JSON, XML, Binary, Text) ---
                 const format = findDataFormat(decodedResult.decoded);
