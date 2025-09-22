@@ -2346,34 +2346,50 @@
                                     // 이미지 미리보기 및 다운로드 버튼
                                     (() => {
                                         if (dataFormat === 'binary' && binaryFormat === 'image' && imageInfo) {
-                                            return React.createElement(Box, { sx: { mt: 2, mb: 2, textAlign: 'center' } },
-                                                React.createElement(Typography, { variant: "subtitle2", sx: { mb: 1 } }, `${t('imageViewLabel')} (${imageInfo.mime})`),
-                                                React.createElement('img', {
-                                                    src: imageInfo.src,
-                                                    alt: "Decoded Image",
-                                                    style: { maxWidth: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid #eee', background: '#fff', display: 'block', margin: '0 auto 12px auto' }
-                                                }),
-                                                React.createElement(
-                                                    MaterialUI.Button,
-                                                    {
-                                                        variant: "contained",
-                                                        color: "primary",
-                                                        size: "small",
-                                                        startIcon: React.createElement("span", { className: "material-icons" }, "download"),
-                                                        onClick: () => {
-                                                            const a = document.createElement('a');
-                                                            a.href = imageInfo.src;
-                                                            a.download = `decoded_image.${imageInfo.ext || 'png'}`;
-                                                            document.body.appendChild(a);
-                                                            a.click();
-                                                            document.body.removeChild(a);
-
-                                                            // 저장 완료 토스트
-                                                            showToast(t('imageSaveSuccess'), 'success');
-                                                        },
-                                                        sx: { mt: 1 }
-                                                    },
-                                                    "이미지 저장"
+                                            return React.createElement(Box, { sx: { mt: 2, mb: 2 } },
+                                                React.createElement(Typography, { variant: "subtitle2", sx: { mb: 1, fontWeight: 'bold' } }, `${t('imageViewLabel')} (${imageInfo.mime})`),
+                                                // 이미지 저장 버튼 (메인 스타일과 동일한 위치)
+                                                React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                                    React.createElement(
+                                                        Tooltip,
+                                                        { title: "이미지를 파일로 저장" },
+                                                        React.createElement(
+                                                            'span',
+                                                            { style: { display: 'inline-block' } },
+                                                            React.createElement(
+                                                                MaterialUI.Button,
+                                                                {
+                                                                    size: "small",
+                                                                    color: "secondary",
+                                                                    variant: "outlined",
+                                                                    startIcon: React.createElement("span", { className: "material-icons" }, "download"),
+                                                                    onClick: () => {
+                                                                        const a = document.createElement('a');
+                                                                        a.href = imageInfo.src;
+                                                                        a.download = `decoded_image.${imageInfo.ext || 'png'}`;
+                                                                        document.body.appendChild(a);
+                                                                        a.click();
+                                                                        document.body.removeChild(a);
+                                                                        showToast(t('imageSaveSuccess'), 'success');
+                                                                    },
+                                                                    sx: { 
+                                                                        verticalAlign: 'middle',
+                                                                        fontSize: { xs: '0.875rem', md: '0.8125rem' },
+                                                                        padding: { xs: '8px 16px', md: '6px 12px' },
+                                                                        minHeight: { xs: 36, md: 32 }
+                                                                    }
+                                                                },
+                                                                "이미지 저장"
+                                                            )
+                                                        )
+                                                    )
+                                                ),
+                                                React.createElement(Box, { sx: { textAlign: 'center' } },
+                                                    React.createElement('img', {
+                                                        src: imageInfo.src,
+                                                        alt: "Decoded Image",
+                                                        style: { maxWidth: '100%', maxHeight: 300, borderRadius: 8, border: '1px solid #eee', background: '#fff', display: 'block', margin: '0 auto' }
+                                                    })
                                                 )
                                             );
                                         }
@@ -2395,33 +2411,21 @@
                                     React.createElement(Typography, { variant: "subtitle1", sx: { mb: 1, fontWeight: 'bold' } },
                                         t('cborDiagnosticNotation')
                                     ),
-                                    React.createElement(Box, {
-                                        sx: {
-                                            position: 'relative',
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: 1,
-                                            backgroundColor: '#f8f9fa'
-                                        }
-                                    },
-                                        React.createElement(Box, {
-                                            sx: {
-                                                position: 'absolute',
-                                                top: 8,
-                                                right: 8,
-                                                zIndex: 1,
-                                                display: 'flex',
-                                                gap: 1
-                                            }
-                                        },
-                                            React.createElement(Tooltip, {
-                                                title: "CBOR 진단 표기 결과 복사"
-                                            },
+                                    // 복사/다운로드 버튼들 (메인 스타일과 동일)
+                                    React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                        React.createElement(
+                                            Tooltip,
+                                            { title: "CBOR 진단 표기 결과 복사" },
+                                            React.createElement(
+                                                'span',
+                                                { style: { display: 'inline-block' } },
                                                 React.createElement(
-                                                    'span',
-                                                    { style: { display: 'inline-block' } },
-                                                    React.createElement(IconButton, {
+                                                    MaterialUI.Button,
+                                                    {
                                                         size: "small",
-                                                        disabled: !cborDiagnostic,
+                                                        color: "primary",
+                                                        variant: "outlined",
+                                                        startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                         onClick: async () => {
                                                             if (!cborDiagnostic) return;
                                                             try {
@@ -2430,21 +2434,33 @@
                                                             } catch (err) {
                                                                 showToast('복사에 실패했습니다.', 'error');
                                                             }
-                                                        }
+                                                        },
+                                                        sx: { 
+                                                            verticalAlign: 'middle', 
+                                                            mr: 1,
+                                                            fontSize: { xs: '0.875rem', md: '0.8125rem' },
+                                                            padding: { xs: '8px 16px', md: '6px 12px' },
+                                                            minHeight: { xs: 36, md: 32 }
+                                                        },
+                                                        disabled: !cborDiagnostic
                                                     },
-                                                        React.createElement("span", { className: "material-icons", style: { fontSize: 18 } }, "content_copy")
-                                                    )
+                                                    t('copyButton')
                                                 )
-                                            ),
-                                            React.createElement(Tooltip, {
-                                                title: "CBOR 진단 표기 결과를 파일로 저장"
-                                            },
+                                            )
+                                        ),
+                                        React.createElement(
+                                            Tooltip,
+                                            { title: "CBOR 진단 표기 결과를 파일로 저장" },
+                                            React.createElement(
+                                                'span',
+                                                { style: { display: 'inline-block' } },
                                                 React.createElement(
-                                                    'span',
-                                                    { style: { display: 'inline-block' } },
-                                                    React.createElement(IconButton, {
+                                                    MaterialUI.Button,
+                                                    {
                                                         size: "small",
-                                                        disabled: !cborDiagnostic,
+                                                        color: "secondary",
+                                                        variant: "outlined",
+                                                        startIcon: React.createElement("span", { className: "material-icons" }, "download"),
                                                         onClick: () => {
                                                             if (!cborDiagnostic) return;
                                                             try {
@@ -2457,13 +2473,28 @@
                                                             } catch (error) {
                                                                 showToast('파일 저장에 실패했습니다.', 'error');
                                                             }
-                                                        }
+                                                        },
+                                                        sx: { 
+                                                            verticalAlign: 'middle',
+                                                            fontSize: { xs: '0.875rem', md: '0.8125rem' },
+                                                            padding: { xs: '8px 16px', md: '6px 12px' },
+                                                            minHeight: { xs: 36, md: 32 }
+                                                        },
+                                                        disabled: !cborDiagnostic
                                                     },
-                                                        React.createElement("span", { className: "material-icons", style: { fontSize: 18 } }, "download")
-                                                    )
+                                                    t('downloadButton')
                                                 )
                                             )
-                                        ),
+                                        )
+                                    ),
+                                    React.createElement(Box, {
+                                        sx: {
+                                            position: 'relative',
+                                            border: '1px solid #e0e0e0',
+                                            borderRadius: 1,
+                                            backgroundColor: '#f8f9fa'
+                                        }
+                                    },
                                         React.createElement(TextField, {
                                             label: "결과",
                                             value: cborDiagnostic,
