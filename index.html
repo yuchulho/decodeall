@@ -1068,7 +1068,6 @@
                 imageSaveSuccess: "이미지를 저장했습니다.",
                 
                 // 기타
-                dragDropHint: "드래그앤드롭한 파일 및 텍스트 모두 동일하게 로컬에서만 처리됩니다.",
                 privacyNote: "입력값은 브라우저에서만 처리되며 저장되지 않습니다.",
                 supportedEncodings: "지원 인코딩",
                 decodeDescription: "자동 디코더가 입력된 텍스트의 인코딩 방식을 감지하여 원본 텍스트로 복원합니다.",
@@ -1124,7 +1123,6 @@
                 imageSaveSuccess: "Image saved successfully.",
                 
                 // 기타
-                dragDropHint: "Drag and drop files are also processed locally only.",
                 privacyNote: "Input is processed only in browser and not stored.",
                 supportedEncodings: "Supported Encodings",
                 decodeDescription: "Auto decoder detects the encoding method of input text and restores it to original text.",
@@ -1673,7 +1671,6 @@
                             },
                                 React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
                                     React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('privacyNote')),
-                                    React.createElement(Typography, { variant: "caption" }, t('dragDropHint'))
                                 )
                             ),
                             // 지원 인코딩 목록: 선택 UI 느낌을 제거한 배지(pill) 스타일
@@ -1789,7 +1786,7 @@
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
-                                        rows: 12,
+                                        rows: 8,
                                         value: input,
                                         onChange: e => setInput(e.target.value),
                                         placeholder: t('inputPlaceholder'),
@@ -2023,7 +2020,7 @@
                                                 variant: "outlined",
                                                 fullWidth: true,
                                                 multiline: true,
-                                                rows: 12,
+                                                rows: 8,
                                                 value: output,
                                                 InputLabelProps: { shrink: true },
                                                 inputRef: outputRef,
@@ -2047,7 +2044,7 @@
                                                 variant: "outlined",
                                                 fullWidth: true,
                                                 multiline: true,
-                                                rows: 12,
+                                                rows: 8,
                                                 value: output,
                                                 InputLabelProps: { shrink: true },
                                                 inputRef: outputRef,
@@ -2231,7 +2228,7 @@
                                             variant: "outlined",
                                             fullWidth: true,
                                             multiline: true,
-                                            rows: 8,
+                                            rows: 6,
                                             InputProps: { readOnly: true },
                                             sx: {
                                                 '& .MuiOutlinedInput-root': {
@@ -2288,7 +2285,7 @@
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
-                                        rows: 12,
+                                        rows: 8,
                                         value: encodeInput,
                                         onChange: e => setEncodeInput(e.target.value),
                                         placeholder: t('encodeInputPlaceholder'),
@@ -2496,7 +2493,7 @@
                                     variant: "outlined",
                                     fullWidth: true,
                                     multiline: true,
-                                    rows: 12,
+                                    rows: 8,
                                     value: encodeResult,
                                     InputLabelProps: { shrink: true },
                                     style: { marginBottom: '20px', background: "#fafdff" },
@@ -2566,7 +2563,7 @@
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
-                                        rows: 6,
+                                        rows: 4,
                                         value: encodeHexResult,
                                         InputLabelProps: { shrink: true },
                                         style: { marginBottom: '20px', background: "#fff8e1" },
