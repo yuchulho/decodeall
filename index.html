@@ -581,7 +581,7 @@
             const CBOR = {
                 id: 'cbor',
                 label: 'CBOR',
-                description: "CBOR(Concise Binary Object Representation)은 JSON과 유사한 이진 직렬화 포맷입니다. 바이너리·Base64로 전달된 데이터를 구조화된 값으로 복원합니다.",
+                description: "CBOR(Concise Binary Object Representation)은 RFC 8949에서 정의된 바이너리 데이터 직렬화 포맷입니다. JSON보다 더 효율적이고 다양한 데이터 타입(정수, 부동소수점, 바이트 배열, 날짜 등)을 지원합니다. IoT, 웹API, 데이터 저장 등에서 JSON의 대안으로 사용됩니다.",
                 detect(input) {
                     console.log("CBOR detect 호출됨. 입력:", input, "길이:", input ? input.length : 0);
                     try {
@@ -690,8 +690,8 @@
 
             const Hex = {
                 id: 'hex',
-                label: 'Hex',
-                description: "Hex(16진수) 인코딩은 각 바이트를 두 자리 16진수 문자열로 변환합니다. 예: 0x41 → '41', h'414243' → 'ABC'",
+                label: 'Hex (Base16)',
+                description: "Hex(16진수/Base16) 인코딩은 각 바이트(8비트)를 두 자리 16진수 문자(0-9, A-F)로 표현하는 방식입니다. 바이너리 데이터를 텍스트로 안전하게 전송하거나 저장할 때 사용되며, 색상 코드(#FF0000), MAC 주소, 암호화 해시값 등에서 흔히 볼 수 있습니다. 예: 'A' → 41, 'ABC' → 414243",
                 detect(input) {
                     try {
                         const compact = (input || '').replace(/\s/g, '');
@@ -747,7 +747,7 @@
             const Base64 = {
                 id: 'base64',
                 label: 'Base64',
-                description: "Base64는 바이너리 데이터를 텍스트로 안전하게 변환하는 인코딩 방식입니다. 이메일 첨부, 이미지 데이터 등에서 널리 사용됩니다.",
+                description: "Base64는 8비트 바이너리 데이터를 64개의 안전한 ASCII 문자(A-Z, a-z, 0-9, +, /)로 인코딩하는 방식입니다. 이메일 첨부파일, 웹의 데이터 URL(data:image/png;base64,...), JSON Web Token, API 통신 등에서 광범위하게 사용됩니다. 3바이트를 4문자로 변환하므로 약 33% 크기가 증가합니다.",
                 detect(input) {
                     try {
                         if (
@@ -790,7 +790,7 @@
             const Base64URL = {
                 id: 'base64url',
                 label: 'Base64URL',
-                description: "Base64URL은 '+','/'를 '-','_'로 바꾸고 '=' 패딩을 제거한 변형입니다. JWT 등에서 사용.",
+                description: "Base64URL은 Base64의 URL-safe 변형으로, URL과 파일명에서 문제가 되는 문자들을 대체합니다. '+'를 '-'로, '/'를 '_'로 바꾸고 패딩('=')을 제거합니다. JWT(JSON Web Token), OAuth 토큰, URL 매개변수에서 바이너리 데이터를 안전하게 전달할 때 사용됩니다.",
                 detect(input) {
                     try {
                         const s = input || '';
@@ -817,7 +817,7 @@
             const UrlEncoding = {
                 id: 'url',
                 label: 'URL Encoding',
-                description: "URL Encoding은 안전하지 않은 문자를 %XX로 변환합니다. 예: 공백 → %20",
+                description: "URL Encoding(퍼센트 인코딩)은 URL에서 특별한 의미를 가지거나 안전하지 않은 문자들을 %XX 형태로 변환하는 방식입니다. 공백은 %20, 한글은 UTF-8로 변환 후 각 바이트를 %XX로 표현합니다. 웹 폼 데이터 전송, 쿼리 스트링, REST API에서 필수적으로 사용됩니다. 예: '안녕' → %EC%95%88%EB%85%95",
                 detect(input) {
                     try {
                         const s = input || '';
@@ -836,7 +836,7 @@
             const HtmlEntities = {
                 id: 'html',
                 label: 'HTML Entities',
-                description: "HTML Entities는 특수문자를 &#코드; 또는 &이름; 형태로 변환합니다. 예: < → &lt;",
+                description: "HTML Entities는 HTML에서 특별한 의미를 가지는 문자들을 안전하게 표현하기 위한 방식입니다. &lt;(&<), &gt;(>), &amp;(&), &quot;(\"), &#숫자; 형태로 인코딩됩니다. 웹 개발에서 XSS 공격 방지, XML/HTML 문서에서 특수문자 표시, 이메일 HTML 템플릿 등에 사용됩니다.",
                 detect(input) {
                     try {
                         const s = input || '';
@@ -856,7 +856,7 @@
             const UnicodeEsc = {
                 id: 'unicode',
                 label: 'Unicode Escape (\\uXXXX)',
-                description: "유니코드 이스케이프는 각 문자를 \\uXXXX로 변환합니다. 예: 가 → \\uAC00",
+                description: "Unicode Escape는 유니코드 문자를 \\uXXXX 형태의 4자리 16진수로 표현하는 방식입니다. JavaScript, JSON, Java, C# 등의 프로그래밍 언어에서 비ASCII 문자를 안전하게 표현할 때 사용됩니다. 예: '가' → \\uAC00, '☃' → \\u2603. 국제화(i18n) 파일이나 로그 분석에서 자주 마주치게 됩니다.",
                 detect(input) {
                     try {
                         const s = input || '';
@@ -872,10 +872,172 @@
                 }
             };
 
+            const UTF8Bytes = {
+                id: 'utf8',
+                label: 'UTF-8',
+                description: "UTF-8은 유니코드 문자를 1~4바이트의 가변 길이로 인코딩하는 방식입니다. ASCII와 완전히 호환되며(ASCII 문자는 1바이트), 전 세계 모든 언어를 표현할 수 있어 웹의 표준 인코딩입니다. 한글은 보통 3바이트로 인코딩됩니다. 예: 'A' → 0x41(1바이트), '가' → 0xEA 0xB0 0x80(3바이트)",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        // 바이너리 문자열을 UTF-8으로 디코딩 시도
+                        if (s.length > 0 && isBinaryString(s, 0.05)) {
+                            try {
+                                const bytes = binStringToUint8(s);
+                                const str = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                                return finalize(str, this.label, input);
+                            } catch {
+                                return { matched: false };
+                            }
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    try {
+                        const utf8Bytes = new TextEncoder().encode(input);
+                        return Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                    } catch {
+                        return '';
+                    }
+                }
+            };
+
+            const ASCII = {
+                id: 'ascii',
+                label: 'ASCII',
+                description: "ASCII(American Standard Code for Information Interchange)는 7비트(0-127)로 영문 알파벳, 숫자, 기본 특수문자를 표현하는 가장 기본적인 문자 인코딩입니다. 1963년에 제정되어 모든 현대 인코딩의 기초가 되었으며, UTF-8과도 완전 호환됩니다. 레거시 시스템이나 제한된 환경에서 여전히 사용됩니다.",
+                detect(input) {
+                    try {
+                        const s = input || '';
+                        // 바이너리 문자열을 ASCII로 디코딩 시도
+                        if (s.length > 0 && isBinaryString(s, 0.05)) {
+                            let validAscii = true;
+                            let result = '';
+                            for (let i = 0; i < s.length; i++) {
+                                const code = s.charCodeAt(i);
+                                if (code > 127) {
+                                    validAscii = false;
+                                    break;
+                                }
+                                result += String.fromCharCode(code);
+                            }
+                            if (validAscii) {
+                                return finalize(result, this.label, input);
+                            }
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    try {
+                        let result = '';
+                        for (let i = 0; i < input.length; i++) {
+                            const code = input.charCodeAt(i);
+                            if (code > 127) {
+                                throw new Error('Non-ASCII character detected');
+                            }
+                            result += String.fromCharCode(code);
+                        }
+                        return result;
+                    } catch {
+                        return '';
+                    }
+                }
+            };
+
+            const Base32 = {
+                id: 'base32',
+                label: 'Base32',
+                description: "Base32는 5비트씩 묶어 32개의 문자(A-Z, 2-7)로 인코딩하는 방식입니다. Base64보다 적은 문자를 사용하여 대소문자를 구분하지 않아도 되고, 혼동하기 쉬운 문자(0, 1, 8, 9)를 제외하여 더 안전합니다. TOTP 인증 시크릿 키, Git 커밋 해시, 분산 시스템의 ID 등에 사용됩니다. 8바이트가 5문자로 변환되어 약 60% 크기 증가합니다.",
+                detect(input) {
+                    try {
+                        const s = (input || '').toUpperCase().replace(/\s/g, '');
+                        if (/^[A-Z2-7=]+$/.test(s) && s.length >= 8 && s.length % 8 === 0) {
+                            const decoded = this.base32Decode(s);
+                            if (decoded !== null) {
+                                // UTF-8로 디코딩 시도
+                                try {
+                                    const bytes = binStringToUint8(decoded);
+                                    const str = new TextDecoder('utf-8').decode(bytes);
+                                    return finalize(str, this.label, input);
+                                } catch {
+                                    // UTF-8 디코딩 실패시 바이너리 문자열로 처리
+                                    return finalize(decoded, this.label, input);
+                                }
+                            }
+                        }
+                    } catch {}
+                    return { matched: false };
+                },
+                encode(input) {
+                    try {
+                        const utf8Bytes = new TextEncoder().encode(input);
+                        const binaryString = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                        return this.base32Encode(binaryString);
+                    } catch {
+                        return '';
+                    }
+                },
+                base32Encode(binaryStr) {
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+                    let bits = '';
+                    
+                    // 바이너리 문자열을 비트로 변환
+                    for (let i = 0; i < binaryStr.length; i++) {
+                        const byte = binaryStr.charCodeAt(i);
+                        bits += byte.toString(2).padStart(8, '0');
+                    }
+                    
+                    // 5비트씩 묶어서 base32 문자로 변환
+                    let result = '';
+                    for (let i = 0; i < bits.length; i += 5) {
+                        const chunk = bits.slice(i, i + 5);
+                        if (chunk.length === 5) {
+                            result += alphabet[parseInt(chunk, 2)];
+                        } else if (chunk.length > 0) {
+                            // 패딩이 필요한 경우
+                            const paddedChunk = chunk.padEnd(5, '0');
+                            result += alphabet[parseInt(paddedChunk, 2)];
+                        }
+                    }
+                    
+                    // 패딩 추가
+                    while (result.length % 8 !== 0) {
+                        result += '=';
+                    }
+                    
+                    return result;
+                },
+                base32Decode(base32Str) {
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+                    const str = base32Str.replace(/=/g, '');
+                    let bits = '';
+                    
+                    // base32 문자를 비트로 변환
+                    for (let i = 0; i < str.length; i++) {
+                        const char = str[i];
+                        const index = alphabet.indexOf(char);
+                        if (index === -1) return null;
+                        bits += index.toString(2).padStart(5, '0');
+                    }
+                    
+                    // 8비트씩 묶어서 바이트로 변환
+                    let result = '';
+                    for (let i = 0; i < bits.length; i += 8) {
+                        const chunk = bits.slice(i, i + 8);
+                        if (chunk.length === 8) {
+                            result += String.fromCharCode(parseInt(chunk, 2));
+                        }
+                    }
+                    
+                    return result;
+                }
+            };
+
             const QuotedPrintable = {
                 id: 'qp',
                 label: 'Quoted-Printable',
-                description: "Quoted-Printable은 8비트를 7비트 전송에 맞추는 인코딩입니다. 예: =0D=0A",
+                description: "Quoted-Printable은 8비트 데이터를 7비트 ASCII 환경에서 안전하게 전송하기 위한 MIME 인코딩 방식입니다. 일반 ASCII 문자는 그대로 두고, 특수문자나 비ASCII 문자만 =XX 형태로 인코딩합니다. 이메일에서 한글이나 특수문자가 포함된 텍스트를 전송할 때 사용되며, Base64보다 가독성이 좋습니다.",
                 detect(input) {
                     try {
                         const s = input || '';
@@ -915,6 +1077,9 @@
                 Hex,
                 Base64,
                 Base64URL,
+                Base32,
+                UTF8Bytes,
+                ASCII,
                 Binary,
                 UrlEncoding,
                 HtmlEntities,
@@ -1699,13 +1864,14 @@
                                     "CBOR",
                                     "Base64",
                                     "Base64URL",
+                                    "Base32",
+                                    "Hex (Base16)",
+                                    "UTF-8",
+                                    "ASCII",
                                     "URL Encoding",
-                                    "Hex",
                                     "HTML Entities",
                                     "Unicode Escape (\\uXXXX)",
                                     "Quoted-Printable",
-                                    "UTF-8 (bytes)",
-                                    "EUC-KR (bytes)",
                                     "Plain Text"
                                 ].map(label =>
                                     React.createElement(Box, {
