@@ -1,0 +1,75 @@
+{
+  "title": "자동 인코딩 감지 & 디코더",
+  "tabs": {
+    "decoder": "디코더",
+    "encoder": "인코더"
+  },
+  "decoder": {
+    "inputLabel": "디코딩할 텍스트 입력",
+    "inputPlaceholder": "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
+    "outputLabel": "디코딩 결과",
+    "encodingTypeLabel": "감지된 인코딩",
+    "beautifyLabel": "Beautify",
+    "hexViewLabel": "HEX View",
+    "imageViewLabel": "이미지 보기",
+    "description": "자동 디코더가 입력된 텍스트의 인코딩 방식을 감지하여 원본 텍스트로 복원합니다.",
+    "copyTooltip": "디코딩 결과 복사",
+    "downloadTooltip": "디코딩 결과를 파일로 저장",
+    "binaryOutputLabel": "바이너리 데이터 출력",
+    "imageSaveTooltip": "이미지를 파일로 저장"
+  },
+  "encoder": {
+    "inputLabel": "인코딩할 텍스트 입력",
+    "inputPlaceholder": "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
+    "resultLabel": "인코딩 결과",
+    "algorithmDescription": "알고리즘 설명",
+    "description": "다양한 알고리즘을 선택하여 텍스트를 원하는 방식으로 인코딩할 수 있습니다.",
+    "textInputLabel": "일반 텍스트 입력",
+    "copyTooltip": "인코딩 결과 복사",
+    "downloadTooltip": "인코딩 결과를 파일로 저장"
+  },
+  "buttons": {
+    "copy": "복사",
+    "download": "파일로 저장",
+    "paste": "붙여넣기",
+    "clear": "지우기",
+    "fileLoad": "파일 로드",
+    "inputClear": "입력 초기화",
+    "hexCopy": "Hex 복사",
+    "imageSave": "파일로 저장"
+  },
+  "messages": {
+    "copySuccess": "복사했습니다.",
+    "copyError": "복사에 실패했습니다.",
+    "binaryNotCopyable": "바이너리 데이터는 복사할 수 없습니다.",
+    "downloadSuccess": "파일을 저장했습니다.",
+    "downloadError": "파일 저장에 실패했습니다.",
+    "pasteSuccess": "붙여넣기 완료",
+    "pasteError": "붙여넣기에 실패했습니다.",
+    "clearSuccess": "내용을 지웠습니다.",
+    "imageSaveSuccess": "이미지를 저장했습니다.",
+    "cannotDecode": "디코딩할 수 없는 데이터입니다.",
+    "noData": "디코딩할 데이터가 없습니다."
+  },
+  "common": {
+    "privacyNote": "입력값은 브라우저에서만 처리되며 저장되지 않습니다.",
+    "supportedEncodings": "지원 인코딩",
+    "cborDecoded": "CBOR 디코딩 결과",
+    "cborDiagnosticNotation": "CBOR Diagnostic Notation",
+    "language": "언어",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "여기에 파일을 드롭하면 내용이 입력됩니다",
+    "binaryDataDescription": "바이너리(비가시 제어문자 포함) 데이터입니다.",
+    "selectEncoding": "인코딩 방식 선택"
+  }
+}

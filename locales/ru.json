@@ -1,0 +1,75 @@
+{
+  "title": "Автоматическое определение кодировки и декодер",
+  "tabs": {
+    "decoder": "Декодер",
+    "encoder": "Кодировщик"
+  },
+  "decoder": {
+    "inputLabel": "Введите текст для декодирования",
+    "inputPlaceholder": "Прямой ввод | Перетащите файл | Используйте кнопку загрузки файла для ввода текста...",
+    "outputLabel": "Результат декодирования",
+    "encodingTypeLabel": "Обнаруженная кодировка",
+    "beautifyLabel": "Форматировать",
+    "hexViewLabel": "HEX-просмотр",
+    "imageViewLabel": "Просмотр изображения",
+    "description": "Автоматический декодер определяет метод кодирования введенного текста и восстанавливает его до исходного текста.",
+    "copyTooltip": "Копировать результат декодирования",
+    "downloadTooltip": "Сохранить результат декодирования в файл",
+    "binaryOutputLabel": "Вывод бинарных данных",
+    "imageSaveTooltip": "Сохранить изображение в файл"
+  },
+  "encoder": {
+    "inputLabel": "Введите текст для кодирования",
+    "inputPlaceholder": "Прямой ввод | Перетащите файл | Используйте кнопку загрузки файла для ввода текста...",
+    "resultLabel": "Результат кодирования",
+    "algorithmDescription": "Описание алгоритма",
+    "description": "Вы можете выбрать различные алгоритмы для кодирования текста в желаемом формате.",
+    "textInputLabel": "Ввод обычного текста",
+    "copyTooltip": "Копировать результат кодирования",
+    "downloadTooltip": "Сохранить результат кодирования в файл"
+  },
+  "buttons": {
+    "copy": "Копировать",
+    "download": "Сохранить файл",
+    "paste": "Вставить",
+    "clear": "Очистить",
+    "fileLoad": "Загрузить файл",
+    "inputClear": "Очистить ввод",
+    "hexCopy": "Копировать Hex",
+    "imageSave": "Сохранить файл"
+  },
+  "messages": {
+    "copySuccess": "Скопировано в буфер обмена.",
+    "copyError": "Не удалось скопировать.",
+    "binaryNotCopyable": "Бинарные данные нельзя скопировать.",
+    "downloadSuccess": "Файл успешно сохранен.",
+    "downloadError": "Не удалось сохранить файл.",
+    "pasteSuccess": "Вставка завершена",
+    "pasteError": "Не удалось вставить.",
+    "clearSuccess": "Содержимое очищено.",
+    "imageSaveSuccess": "Изображение успешно сохранено.",
+    "cannotDecode": "Невозможно декодировать данные.",
+    "noData": "Нет данных для декодирования."
+  },
+  "common": {
+    "privacyNote": "Ввод обрабатывается только в браузере и не сохраняется.",
+    "supportedEncodings": "Поддерживаемые кодировки",
+    "cborDecoded": "Результат декодирования CBOR",
+    "cborDiagnosticNotation": "Диагностическая нотация CBOR",
+    "language": "Язык",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "Перетащите файлы сюда для ввода содержимого",
+    "binaryDataDescription": "Бинарные данные (включая невидимые управляющие символы).",
+    "selectEncoding": "Выберите метод кодирования"
+  }
+}

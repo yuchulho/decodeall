@@ -1,0 +1,75 @@
+{
+  "title": "自动编码检测和解码器",
+  "tabs": {
+    "decoder": "解码器",
+    "encoder": "编码器"
+  },
+  "decoder": {
+    "inputLabel": "输入要解码的文本",
+    "inputPlaceholder": "直接输入 | 拖拽文件 | 使用文件加载按钮输入文本...",
+    "outputLabel": "解码结果",
+    "encodingTypeLabel": "检测到的编码",
+    "beautifyLabel": "美化",
+    "hexViewLabel": "十六进制视图",
+    "imageViewLabel": "图像视图",
+    "description": "自动解码器检测输入文本的编码方式并将其还原为原始文本。",
+    "copyTooltip": "复制解码结果",
+    "downloadTooltip": "将解码结果保存到文件",
+    "binaryOutputLabel": "二进制数据输出",
+    "imageSaveTooltip": "将图像保存到文件"
+  },
+  "encoder": {
+    "inputLabel": "输入要编码的文本",
+    "inputPlaceholder": "直接输入 | 拖拽文件 | 使用文件加载按钮输入文本...",
+    "resultLabel": "编码结果",
+    "algorithmDescription": "算法说明",
+    "description": "您可以选择各种算法以所需的方式对文本进行编码。",
+    "textInputLabel": "纯文本输入",
+    "copyTooltip": "复制编码结果",
+    "downloadTooltip": "将编码结果保存到文件"
+  },
+  "buttons": {
+    "copy": "复制",
+    "download": "保存文件",
+    "paste": "粘贴",
+    "clear": "清除",
+    "fileLoad": "加载文件",
+    "inputClear": "清除输入",
+    "hexCopy": "复制十六进制",
+    "imageSave": "保存文件"
+  },
+  "messages": {
+    "copySuccess": "已复制。",
+    "copyError": "复制失败。",
+    "binaryNotCopyable": "无法复制二进制数据。",
+    "downloadSuccess": "文件已保存。",
+    "downloadError": "文件保存失败。",
+    "pasteSuccess": "粘贴完成",
+    "pasteError": "粘贴失败。",
+    "clearSuccess": "内容已清除。",
+    "imageSaveSuccess": "图像已保存。",
+    "cannotDecode": "无法解码此数据。",
+    "noData": "没有要解码的数据。"
+  },
+  "common": {
+    "privacyNote": "输入仅在浏览器中处理，不会被保存。",
+    "supportedEncodings": "支持的编码",
+    "cborDecoded": "CBOR解码结果",
+    "cborDiagnosticNotation": "CBOR诊断记法",
+    "language": "语言",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "将文件拖拽到此处即可输入内容",
+    "binaryDataDescription": "二进制（包含不可见控制字符）数据。",
+    "selectEncoding": "选择编码方式"
+  }
+}

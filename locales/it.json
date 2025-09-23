@@ -1,0 +1,75 @@
+{
+  "title": "Rilevamento Automatico Codifica e Decodificatore",
+  "tabs": {
+    "decoder": "Decodificatore",
+    "encoder": "Codificatore"
+  },
+  "decoder": {
+    "inputLabel": "Inserisci il testo da decodificare",
+    "inputPlaceholder": "Input diretto | Trascinamento | Usa il pulsante di caricamento file per inserire testo...",
+    "outputLabel": "Risultato decodifica",
+    "encodingTypeLabel": "Codifica rilevata",
+    "beautifyLabel": "Abbellisci",
+    "hexViewLabel": "Vista HEX",
+    "imageViewLabel": "Vista immagine",
+    "description": "Il decodificatore automatico rileva il metodo di codifica del testo inserito e lo ripristina al testo originale.",
+    "copyTooltip": "Copia risultato decodifica",
+    "downloadTooltip": "Salva risultato decodifica su file",
+    "binaryOutputLabel": "Output dati binari",
+    "imageSaveTooltip": "Salva immagine su file"
+  },
+  "encoder": {
+    "inputLabel": "Inserisci il testo da codificare",
+    "inputPlaceholder": "Input diretto | Trascinamento | Usa il pulsante di caricamento file per inserire testo...",
+    "resultLabel": "Risultato codifica",
+    "algorithmDescription": "Descrizione algoritmo",
+    "description": "Puoi selezionare vari algoritmi per codificare il testo nel formato desiderato.",
+    "textInputLabel": "Input testo semplice",
+    "copyTooltip": "Copia risultato codifica",
+    "downloadTooltip": "Salva risultato codifica su file"
+  },
+  "buttons": {
+    "copy": "Copia",
+    "download": "Salva file",
+    "paste": "Incolla",
+    "clear": "Cancella",
+    "fileLoad": "Carica file",
+    "inputClear": "Cancella input",
+    "hexCopy": "Copia Hex",
+    "imageSave": "Salva file"
+  },
+  "messages": {
+    "copySuccess": "Copiato negli appunti.",
+    "copyError": "Copia fallita.",
+    "binaryNotCopyable": "I dati binari non possono essere copiati.",
+    "downloadSuccess": "File salvato con successo.",
+    "downloadError": "Salvataggio file fallito.",
+    "pasteSuccess": "Incolla completato",
+    "pasteError": "Incolla fallito.",
+    "clearSuccess": "Contenuto cancellato.",
+    "imageSaveSuccess": "Immagine salvata con successo.",
+    "cannotDecode": "Impossibile decodificare i dati.",
+    "noData": "Nessun dato da decodificare."
+  },
+  "common": {
+    "privacyNote": "L'input viene elaborato solo nel browser e non viene memorizzato.",
+    "supportedEncodings": "Codifiche supportate",
+    "cborDecoded": "Risultato decodifica CBOR",
+    "cborDiagnosticNotation": "Notazione diagnostica CBOR",
+    "language": "Lingua",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "Trascina i file qui per inserire contenuto",
+    "binaryDataDescription": "Dati binari (inclusi caratteri di controllo non visibili).",
+    "selectEncoding": "Seleziona metodo di codifica"
+  }
+}

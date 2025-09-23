@@ -1,0 +1,75 @@
+{
+  "title": "Automatische Kodierungserkennung und Dekoder",
+  "tabs": {
+    "decoder": "Dekoder",
+    "encoder": "Enkoder"
+  },
+  "decoder": {
+    "inputLabel": "Text zum Dekodieren eingeben",
+    "inputPlaceholder": "Direkte Eingabe | Drag & Drop | Datei-Laden-Button verwenden, um Text einzugeben...",
+    "outputLabel": "Dekodierungsergebnis",
+    "encodingTypeLabel": "Erkannte Kodierung",
+    "beautifyLabel": "Verschönern",
+    "hexViewLabel": "HEX-Ansicht",
+    "imageViewLabel": "Bildansicht",
+    "description": "Der automatische Dekoder erkennt die Kodierungsmethode des eingegebenen Textes und stellt ihn zum ursprünglichen Text wieder her.",
+    "copyTooltip": "Dekodierungsergebnis kopieren",
+    "downloadTooltip": "Dekodierungsergebnis in Datei speichern",
+    "binaryOutputLabel": "Binärdatenausgabe",
+    "imageSaveTooltip": "Bild in Datei speichern"
+  },
+  "encoder": {
+    "inputLabel": "Text zum Kodieren eingeben",
+    "inputPlaceholder": "Direkte Eingabe | Drag & Drop | Datei-Laden-Button verwenden, um Text einzugeben...",
+    "resultLabel": "Kodierungsergebnis",
+    "algorithmDescription": "Algorithmusbeschreibung",
+    "description": "Sie können verschiedene Algorithmen auswählen, um Text im gewünschten Format zu kodieren.",
+    "textInputLabel": "Klartexteingabe",
+    "copyTooltip": "Kodierungsergebnis kopieren",
+    "downloadTooltip": "Kodierungsergebnis in Datei speichern"
+  },
+  "buttons": {
+    "copy": "Kopieren",
+    "download": "Datei speichern",
+    "paste": "Einfügen",
+    "clear": "Löschen",
+    "fileLoad": "Datei laden",
+    "inputClear": "Eingabe löschen",
+    "hexCopy": "Hex kopieren",
+    "imageSave": "Datei speichern"
+  },
+  "messages": {
+    "copySuccess": "In die Zwischenablage kopiert.",
+    "copyError": "Kopieren fehlgeschlagen.",
+    "binaryNotCopyable": "Binärdaten können nicht kopiert werden.",
+    "downloadSuccess": "Datei erfolgreich gespeichert.",
+    "downloadError": "Datei speichern fehlgeschlagen.",
+    "pasteSuccess": "Einfügen abgeschlossen",
+    "pasteError": "Einfügen fehlgeschlagen.",
+    "clearSuccess": "Inhalt gelöscht.",
+    "imageSaveSuccess": "Bild erfolgreich gespeichert.",
+    "cannotDecode": "Daten können nicht dekodiert werden.",
+    "noData": "Keine Daten zum Dekodieren."
+  },
+  "common": {
+    "privacyNote": "Eingabe wird nur im Browser verarbeitet und nicht gespeichert.",
+    "supportedEncodings": "Unterstützte Kodierungen",
+    "cborDecoded": "CBOR-Dekodierungsergebnis",
+    "cborDiagnosticNotation": "CBOR-Diagnosenotation",
+    "language": "Sprache",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "Dateien hier ablegen, um Inhalt einzugeben",
+    "binaryDataDescription": "Binärdaten (einschließlich nicht sichtbarer Steuerzeichen).",
+    "selectEncoding": "Kodierungsmethode auswählen"
+  }
+}

@@ -97,6 +97,9 @@
     <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- i18next and react-i18next -->
+    <script src="https://unpkg.com/i18next@23.7.6/dist/umd/i18next.min.js"></script>
+    <script src="https://unpkg.com/react-i18next@13.5.0/dist/umd/react-i18next.min.js"></script>
     <!-- Material UI -->
     <script src="https://unpkg.com/@mui/material@5.15.15/umd/material-ui.development.js"></script>
     <!-- GSAP CDN -->
@@ -187,7 +190,6 @@
         };
 
         // 상수 정의
-        const DRAG_MESSAGE = "여기에 파일을 드롭하면 내용이 입력됩니다";
         const MATERIAL_ICON_UPLOAD = "file_upload";
         const {
             Box,
@@ -1167,7 +1169,7 @@
             const Binary = {
                 id: 'bin',
                 label: 'Binary',
-                description: "바이너리(비가시 제어문자 포함) 데이터입니다.",
+                description: 'Binary data (including non-visible control characters).',
                 detect(input) {
                     const s = input || '';
                     // 민감도 높임: 5%
@@ -1284,139 +1286,107 @@
         function detectBrowserLanguage() {
             // localStorage에서 저장된 언어 설정 확인
             const savedLanguage = localStorage.getItem('decodeall-language');
-            if (savedLanguage && (savedLanguage === 'ko' || savedLanguage === 'en')) {
+            const supportedLanguages = ['ko', 'en', 'ja', 'zh-CN', 'zh-TW', 'es', 'fr', 'de', 'ru', 'pt', 'it'];
+            if (savedLanguage && supportedLanguages.includes(savedLanguage)) {
                 return savedLanguage;
             }
             
             // 저장된 설정이 없으면 브라우저 언어 감지
             const lang = navigator.language || navigator.userLanguage;
             if (lang.startsWith('ko')) return 'ko';
+            if (lang.startsWith('ja')) return 'ja';
+            if (lang === 'zh-CN' || lang === 'zh-Hans') return 'zh-CN';
+            if (lang === 'zh-TW' || lang === 'zh-Hant') return 'zh-TW';
+            if (lang.startsWith('es')) return 'es';
+            if (lang.startsWith('fr')) return 'fr';
+            if (lang.startsWith('de')) return 'de';
+            if (lang.startsWith('ru')) return 'ru';
+            if (lang.startsWith('pt')) return 'pt';
+            if (lang.startsWith('it')) return 'it';
             return 'en'; // 기본값은 영어
         }
 
-        // 번역 데이터
-        const translations = {
-            ko: {
-                // 메인 타이틀
-                title: "자동 인코딩 감지 & 디코더",
-                
-                // 탭 제목
-                tabDecoder: "디코더",
-                tabEncoder: "인코더",
-                
-                // 디코더 섹션
-                inputLabel: "디코딩할 텍스트 입력",
-                inputPlaceholder: "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
-                outputLabel: "디코딩 결과",
-                encodingTypeLabel: "감지된 인코딩",
-                beautifyLabel: "Beautify",
-                hexViewLabel: "HEX View",
-                imageViewLabel: "이미지 보기",
-                
-                // 인코더 섹션
-                encodeInputLabel: "인코딩할 텍스트 입력",
-                encodeInputPlaceholder: "직접 입력 | 드래그 앤 드롭 | 파일 로드 버튼으로 텍스트를 입력하세요...",
-                encodeResultLabel: "인코딩 결과",
-                algorithmDescription: "알고리즘 설명",
-                
-                // 버튼
-                copyButton: "복사",
-                downloadButton: "파일로 저장",
-                pasteButton: "붙여넣기",
-                clearButton: "지우기",
-                
-                // 메시지
-                copySuccess: "복사했습니다.",
-                copyError: "복사에 실패했습니다.",
-                binaryNotCopyable: "바이너리 데이터는 복사할 수 없습니다.",
-                downloadSuccess: "파일을 저장했습니다.",
-                downloadError: "파일 저장에 실패했습니다.",
-                pasteSuccess: "붙여넣기 완료",
-                pasteError: "붙여넣기에 실패했습니다.",
-                clearSuccess: "내용을 지웠습니다.",
-                imageSaveSuccess: "이미지를 저장했습니다.",
-                
-                // 기타
-                privacyNote: "입력값은 브라우저에서만 처리되며 저장되지 않습니다.",
-                supportedEncodings: "지원 인코딩",
-                decodeDescription: "자동 디코더가 입력된 텍스트의 인코딩 방식을 감지하여 원본 텍스트로 복원합니다.",
-                encodeDescription: "다양한 알고리즘을 선택하여 텍스트를 원하는 방식으로 인코딩할 수 있습니다.",
-                cannotDecode: "디코딩할 수 없는 데이터입니다.",
-                noData: "디코딩할 데이터가 없습니다.",
-                cborDecoded: "CBOR 디코딩 결과",
-                cborDiagnosticNotation: "CBOR Diagnostic Notation",
-                
-                // 언어 선택
-                languageLabel: "언어",
-                korean: "한국어",
-                english: "English"
-            },
-            en: {
-                // 메인 타이틀
-                title: "Auto Encoding Detection & Decoder",
-                
-                // 탭 제목
-                tabDecoder: "Decoder",
-                tabEncoder: "Encoder",
-                
-                // 디코더 섹션
-                inputLabel: "Input text to decode",
-                inputPlaceholder: "Direct input | Drag & drop | File load button - Enter your text...",
-                outputLabel: "Decoding result",
-                encodingTypeLabel: "Detected encoding",
-                beautifyLabel: "Beautify",
-                hexViewLabel: "HEX View",
-                imageViewLabel: "Image View",
-                
-                // 인코더 섹션
-                encodeInputLabel: "Input text to encode",
-                encodeInputPlaceholder: "Direct input | Drag & drop | File load button - Enter your text...",
-                encodeResultLabel: "Encoding result",
-                algorithmDescription: "Algorithm description",
-                
-                // 버튼
-                copyButton: "Copy",
-                downloadButton: "Save File",
-                pasteButton: "Paste",
-                clearButton: "Clear",
-                
-                // 메시지
-                copySuccess: "Copied to clipboard.",
-                copyError: "Failed to copy.",
-                binaryNotCopyable: "Binary data cannot be copied.",
-                downloadSuccess: "File saved successfully.",
-                downloadError: "Failed to save file.",
-                pasteSuccess: "Paste completed",
-                pasteError: "Failed to paste.",
-                clearSuccess: "Content cleared.",
-                imageSaveSuccess: "Image saved successfully.",
-                
-                // 기타
-                privacyNote: "Input is processed only in browser and not stored.",
-                supportedEncodings: "Supported Encodings",
-                decodeDescription: "Auto decoder detects the encoding method of input text and restores it to original text.",
-                encodeDescription: "You can select various algorithms to encode text in your desired format.",
-                cannotDecode: "Cannot decode the data.",
-                noData: "No data to decode.",
-                cborDecoded: "CBOR Decoded Result",
-                cborDiagnosticNotation: "CBOR Diagnostic Notation",
-                
-                // 언어 선택
-                languageLabel: "Language",
-                korean: "한국어",
-                english: "English"
+        // i18next 초기화
+        i18next.init({
+            lng: detectBrowserLanguage(),
+            fallbackLng: 'en',
+            debug: false,
+            resources: {
+                ko: { translation: {} },
+                en: { translation: {} },
+                ja: { translation: {} },
+                'zh-CN': { translation: {} },
+                'zh-TW': { translation: {} },
+                es: { translation: {} },
+                fr: { translation: {} },
+                de: { translation: {} },
+                ru: { translation: {} },
+                pt: { translation: {} },
+                it: { translation: {} }
             }
-        };
+        });
+
+        // 언어 파일 로드 함수
+        async function loadLanguageResources() {
+            try {
+                const languages = [
+                    { code: 'ko', file: './locales/ko.json' },
+                    { code: 'en', file: './locales/en.json' },
+                    { code: 'ja', file: './locales/ja.json' },
+                    { code: 'zh-CN', file: './locales/zh-CN.json' },
+                    { code: 'zh-TW', file: './locales/zh-TW.json' },
+                    { code: 'es', file: './locales/es.json' },
+                    { code: 'fr', file: './locales/fr.json' },
+                    { code: 'de', file: './locales/de.json' },
+                    { code: 'ru', file: './locales/ru.json' },
+                    { code: 'pt', file: './locales/pt.json' },
+                    { code: 'it', file: './locales/it.json' }
+                ];
+                
+                for (const lang of languages) {
+                    const response = await fetch(lang.file);
+                    const data = await response.json();
+                    i18next.addResourceBundle(lang.code, 'translation', data, true, true);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Failed to load language resources:', error);
+                return false;
+            }
+        }
 
         // React hooks 선언
         const { useState, useEffect, useRef } = React;
 
         function EncoderDecoderTabs() {
-            // 언어 상태 (브라우저 언어 자동 감지)
+            // 언어 상태
             const [language, setLanguage] = useState(detectBrowserLanguage());
+            const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
             
-            // 번역 함수
-            const t = (key) => translations[language][key] || key;
+            // i18next 훅 사용
+            const { t, i18n } = ReactI18next.useTranslation();
+            
+            // 번역 함수들
+            const getDragMessage = () => t('common.dragMessage');
+            
+            // 언어 리소스 로드
+            useEffect(() => {
+                loadLanguageResources().then((success) => {
+                    if (success) {
+                        i18n.changeLanguage(language);
+                        setIsLanguageLoaded(true);
+                    }
+                });
+            }, []);
+
+            // 언어 변경 처리
+            useEffect(() => {
+                if (isLanguageLoaded) {
+                    i18n.changeLanguage(language);
+                    localStorage.setItem('decodeall-language', language);
+                }
+            }, [language, isLanguageLoaded]);
             
             const [tab, setTab] = useState(0);
 
@@ -1485,15 +1455,15 @@
                 if (!content) return;
                 
                 if (isBinary) {
-                    showToast(t('binaryNotCopyable'), 'error');
+                    showToast(t('messages.binaryNotCopyable'), 'error');
                     return;
                 }
                 
                 try {
                     await navigator.clipboard.writeText(content);
-                    showToast(t('copySuccess'), 'success');
+                    showToast(t('messages.copySuccess'), 'success');
                 } catch {
-                    showToast(t('copyError'), 'error');
+                    showToast(t('messages.copyError'), 'error');
                 }
             };
             
@@ -1510,12 +1480,12 @@
                     }
                     
                     if (success) {
-                        showToast(t('downloadSuccess'), 'success');
+                        showToast(t('messages.downloadSuccess'), 'success');
                     } else {
-                        showToast(t('downloadError'), 'error');
+                        showToast(t('messages.downloadError'), 'error');
                     }
                 } catch (error) {
-                    showToast(t('downloadError'), 'error');
+                    showToast(t('messages.downloadError'), 'error');
                 }
             };
 
@@ -1743,7 +1713,7 @@
                     const decodedResult = detectEncoding(input);
 
                     if (!decodedResult || !decodedResult.matched || !decodedResult.decoded) {
-                        setError(t('cannotDecode'));
+                        setError(t('messages.cannotDecode'));
                         setEncoding(decodedResult.encoding || '');
                         return;
                     }
@@ -1894,6 +1864,19 @@
             // Chip 목록은 레지스트리에서 가져오기
             const encoderLabels = Codecs.getEncoderLabels();
 
+            // 언어 로딩 중일 때 로딩 표시
+            if (!isLanguageLoaded) {
+                return React.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        height: '100vh',
+                        fontSize: '16px'
+                    }
+                }, 'Loading...');
+            }
+
             return (
                 React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
                     React.createElement(Grid, { item: true, xs: 12, sm: 11, md: 8, lg: 6 },
@@ -1941,7 +1924,7 @@
                                 icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "shield")
                             },
                                 React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
-                                    React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('privacyNote')),
+                                    React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('common.privacyNote')),
                                 )
                             ),
                             // 지원 인코딩 목록: 선택 UI 느낌을 제거한 배지(pill) 스타일
@@ -1965,7 +1948,7 @@
                                         fontSize: { xs: 10, md: 12 }, 
                                         fontWeight: 600
                                     }
-                                }, t('supportedEncodings')),
+                                }, t('common.supportedEncodings')),
                                 [
                                     "CBOR",
                                     "Base64",
@@ -2006,14 +1989,14 @@
                                     '& .MuiTab-root': commonStyles.tab
                                 }
                             },
-                                React.createElement(Tab, { label: t('tabDecoder') }),
-                                React.createElement(Tab, { label: t('tabEncoder') })
+                                React.createElement(Tab, { label: t('tabs.decoder') }),
+                                React.createElement(Tab, { label: t('tabs.encoder') })
                             ),
 
                             // ----------------- 디코딩 탭 -----------------
                             tab === 0 && React.createElement(Box, null,
                                 React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
-                                    t('decodeDescription')
+                                    t('decoder.description')
                                 ),
                                 // 입력 초기화 및 파일 로드 버튼
                                 React.createElement(Box, { sx: { textAlign: 'right', mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 } },
@@ -2027,7 +2010,7 @@
                                             onClick: () => handleFileSelect(setInput),
                                             sx: commonStyles.smallButton
                                         },
-                                        "파일 로드"
+                                        t('buttons.fileLoad')
                                     ),
                                     React.createElement(
                                         MaterialUI.Button,
@@ -2040,7 +2023,7 @@
                                             disabled: !input,
                                             sx: commonStyles.smallButton
                                         },
-                                        "입력 초기화"
+                                        t('buttons.inputClear')
                                     )
                                 ),
                                 // 1. 디코딩 입력 (드래그앤드롭 지원 + 드래그오버 UI)
@@ -2051,14 +2034,14 @@
                                     onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(false); }
                                 },
                                     React.createElement(TextField, {
-                                        label: "인코딩된 텍스트 입력",
+                                        label: t('decoder.inputLabel'),
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
                                         rows: 8,
                                         value: input,
                                         onChange: e => setInput(e.target.value),
-                                        placeholder: t('inputPlaceholder'),
+                                        placeholder: t('decoder.inputPlaceholder'),
                                         InputLabelProps: { shrink: true },
                                         inputRef: inputRef,
                                         inputProps: {
@@ -2090,7 +2073,7 @@
                                             className: 'drag-message'
                                         },
                                             React.createElement("span", { className: "material-icons", style: { fontSize: 28, marginRight: 8 } }, MATERIAL_ICON_UPLOAD),
-                                            DRAG_MESSAGE
+                                            getDragMessage()
                                         )
                                     ),
                                     React.createElement('span', {
@@ -2135,7 +2118,7 @@
                                     React.createElement(Typography, { 
                                         variant: "body2", 
                                         sx: { fontWeight: 600 } 
-                                    }, `${t('encodingTypeLabel')}: ${encoding}`)
+                                    }, `${t('decoder.encodingTypeLabel')}: ${encoding}`)
                                 ),
                                 // 복사/파일저장 버튼들
                                 React.createElement(Box, { 
@@ -2150,7 +2133,7 @@
                                 },
                                     React.createElement(
                                         Tooltip,
-                                        { title: "디코딩 결과 복사" },
+                                        { title: t('decoder.copyTooltip') },
                                         React.createElement(
                                             'span', // Add span wrapper
                                             { style: { display: 'inline-block' } },
@@ -2167,13 +2150,13 @@
                                                     },
                                                     disabled: !output
                                                 },
-                                                t('copyButton')
+                                                t('buttons.copy')
                                             )
                                         )
                                     ),
                                     React.createElement(
                                         Tooltip,
-                                        { title: "디코딩 결과를 파일로 저장" },
+                                        { title: t('decoder.downloadTooltip') },
                                         React.createElement(
                                             'span', // Add span wrapper
                                             { style: { display: 'inline-block' } },
@@ -2195,14 +2178,14 @@
                                                     sx: commonStyles.smallButton,
                                                     disabled: !output
                                                 },
-                                                t('downloadButton')
+                                                t('buttons.download')
                                             )
                                         )
                                     )
                                 ),
                                 // 디코딩 결과 (원본)
                                 React.createElement(Box, { sx: { position: 'relative' } },
-                                    error === t('cannotDecode') ? (
+                                    error === t('messages.cannotDecode') ? (
                                         React.createElement('div', {
                                             style: {
                                                 minHeight: 220,
@@ -2221,7 +2204,7 @@
                                                 border: '1.5px solid #ffc107'
                                             }
                                         },
-                                            React.createElement('div', null, t('cannotDecode')),
+                                            React.createElement('div', null, t('messages.cannotDecode')),
                                             encoding && React.createElement('div', {
                                                 style: {
                                                     marginTop: 18,
@@ -2237,7 +2220,7 @@
                                     ) : (
                                         dataFormat === 'binary' && !imageInfo && binaryFormat !== 'cbor'
                                             ? React.createElement(TextField, {
-                                                label: "바이너리 데이터 출력",
+                                                label: t('decoder.binaryOutputLabel'),
                                                 variant: "outlined",
                                                 fullWidth: true,
                                                 multiline: true,
@@ -2261,7 +2244,7 @@
                                                 }
                                             })
                                             : React.createElement(TextField, {
-                                                label: t('outputLabel'),
+                                                label: t('decoder.outputLabel'),
                                                 variant: "outlined",
                                                 fullWidth: true,
                                                 multiline: true,
@@ -2298,12 +2281,12 @@
                                     (() => {
                                         if (dataFormat === 'binary' && binaryFormat === 'image' && imageInfo) {
                                             return React.createElement(Box, { sx: { mt: 2, mb: 2 } },
-                                                React.createElement(Typography, { variant: "subtitle2", sx: { mb: 1, fontWeight: 'bold' } }, `${t('imageViewLabel')} (${imageInfo.mime})`),
+                                                React.createElement(Typography, { variant: "subtitle2", sx: { mb: 1, fontWeight: 'bold' } }, `${t('decoder.imageViewLabel')} (${imageInfo.mime})`),
                                                 // 이미지 저장 버튼 (메인 스타일과 동일한 위치)
                                                 React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
                                                     React.createElement(
                                                         Tooltip,
-                                                        { title: "이미지를 파일로 저장" },
+                                                        { title: t('decoder.imageSaveTooltip') },
                                                         React.createElement(
                                                             'span',
                                                             { style: { display: 'inline-block' } },
@@ -2327,7 +2310,7 @@
                                                                         ...commonStyles.smallButton
                                                                     }
                                                                 },
-                                                                "파일로 저장"
+                                                                t('buttons.download')
                                                             )
                                                         )
                                                     )
@@ -2349,7 +2332,7 @@
                                 (dataFormat === 'json' || dataFormat === 'xml') && beautified &&
                                     React.createElement(Box, { sx: { mt: 2 } },
                                         React.createElement(Typography, { variant: "subtitle1", sx: { mb: 1, fontWeight: 'bold' } },
-                                            t('beautifyLabel') + (syntaxError ? ' (Syntax Error)' : '')
+                                            t('decoder.beautifyLabel') + (syntaxError ? ' (Syntax Error)' : '')
                                         ),
                                         renderBeautifiedWithError(beautified, dataFormat, syntaxErrorLine)
                                     ),
@@ -2384,7 +2367,7 @@
                                                         sx: commonStyles.smallButton,
                                                         disabled: !cborDiagnostic
                                                     },
-                                                    t('copyButton')
+                                                    t('buttons.copy')
                                                 )
                                             )
                                         ),
@@ -2405,7 +2388,7 @@
                                                         sx: commonStyles.smallButton,
                                                         disabled: !cborDiagnostic
                                                     },
-                                                    t('downloadButton')
+                                                    t('buttons.download')
                                                 )
                                             )
                                         )
@@ -2441,7 +2424,7 @@
                             // ----------------- 인코딩 탭 -----------------
                             tab === 1 && React.createElement(Box, null,
                                 React.createElement(Typography, { variant: "body2", color: "textSecondary", align: "center", style: { marginBottom: 16 } },
-                                    t('encodeDescription')
+                                    t('encoder.description')
                                 ),
                                 // 입력 초기화 및 파일 로드 버튼
                                 React.createElement(Box, { sx: { textAlign: 'right', mb: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 } },
@@ -2455,7 +2438,7 @@
                                             onClick: () => handleFileSelect(setEncodeInput),
                                             sx: commonStyles.smallButton
                                         },
-                                        "파일 로드"
+                                        t('buttons.fileLoad')
                                     ),
                                     React.createElement(
                                         MaterialUI.Button,
@@ -2468,7 +2451,7 @@
                                             disabled: !encodeInput,
                                             sx: commonStyles.smallButton
                                         },
-                                        "입력 초기화"
+                                        t('buttons.inputClear')
                                     )
                                 ),
                                 // 1. 인코딩 입력 (드래그앤드롭 지원 + 드래그오버 UI)
@@ -2479,14 +2462,14 @@
                                     onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverEncode(false); }
                                 },
                                     React.createElement(TextField, {
-                                        label: "일반 텍스트 입력",
+                                        label: t('encoder.textInputLabel'),
                                         variant: "outlined",
                                         fullWidth: true,
                                         multiline: true,
                                         rows: 8,
                                         value: encodeInput,
                                         onChange: e => setEncodeInput(e.target.value),
-                                        placeholder: t('encodeInputPlaceholder'),
+                                        placeholder: t('encoder.inputPlaceholder'),
                                         InputLabelProps: { shrink: true },
                                         inputRef: encodeInputRef,
                                         inputProps: {
@@ -2506,7 +2489,7 @@
                                             className: 'drag-message'
                                         },
                                             React.createElement("span", { className: "material-icons", style: { fontSize: 28, marginRight: 8 } }, MATERIAL_ICON_UPLOAD),
-                                            DRAG_MESSAGE
+                                            getDragMessage()
                                         )
                                     ),
                                     React.createElement('span', {
@@ -2528,7 +2511,7 @@
                                         sx: { display: 'flex', alignItems: 'center', fontWeight: 700, color: 'primary.main' }
                                     },
                                         React.createElement("span", { className: "material-icons", style: { fontSize: 18, marginRight: 6 } }, "tune"),
-                                        "인코딩 방식 선택"
+                                        t('common.selectEncoding')
                                     )
                                 ),
                                 React.createElement(Box, { sx: { mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1 } },
@@ -2568,7 +2551,7 @@
                                     icon: React.createElement("span", { className: "material-icons", style: { color: '#1976d2' } }, "info")
                                 },
                                     React.createElement(Box, { sx: { display: 'flex', flexDirection: 'column' } },
-                                        React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('algorithmDescription')),
+                                        React.createElement(Typography, { variant: "body2", sx: { fontWeight: 700 } }, t('encoder.algorithmDescription')),
                                         React.createElement(Typography, { variant: "caption" }, Codecs.getDescriptionByLabel(encodeType))
                                     )
                                 ),
@@ -2586,7 +2569,7 @@
                                 },
                                     React.createElement(
                                         Tooltip,
-                                        { title: "인코딩 결과 복사" },
+                                        { title: t('encoder.copyTooltip') },
                                         React.createElement(
                                             'span', // Add span wrapper
                                             { style: { display: 'inline-block' } },
@@ -2601,13 +2584,13 @@
                                                     sx: commonStyles.smallButton,
                                                     disabled: !encodeResult
                                                 },
-                                                t('copyButton')
+                                                t('buttons.copy')
                                             )
                                         )
                                     ),
                                     React.createElement(
                                         Tooltip,
-                                        { title: "인코딩 결과를 파일로 저장" },
+                                        { title: t('encoder.downloadTooltip') },
                                         React.createElement(
                                             'span', // Add span wrapper
                                             { style: { display: 'inline-block' } },
@@ -2629,13 +2612,13 @@
                                                     sx: commonStyles.smallButton,
                                                     disabled: !encodeResult
                                                 },
-                                                t('downloadButton')
+                                                t('buttons.download')
                                             )
                                         )
                                     )
                                 ),
                                 React.createElement(TextField, {
-                                    label: t('encodeResultLabel'),
+                                    label: t('encoder.resultLabel'),
                                     variant: "outlined",
                                     fullWidth: true,
                                     multiline: true,
@@ -2689,7 +2672,7 @@
                                                     sx: commonStyles.smallButton,
                                                     disabled: !encodeHexResult
                                                 },
-                                                "파일로 저장"
+                                                t('buttons.download')
                                             )
                                         )
                                     ),
@@ -2733,12 +2716,12 @@
                                     React.createElement(MaterialUI.InputLabel, { 
                                         id: "language-select-label",
                                         sx: { fontSize: { xs: '0.9rem', md: '0.875rem' } }
-                                    }, t('languageLabel')),
+                                    }, t('common.language')),
                                     React.createElement(MaterialUI.Select, {
                                         labelId: "language-select-label",
                                         value: language,
                                         onChange: (event) => setLanguage(event.target.value),
-                                        label: t('languageLabel'),
+                                        label: t('common.language'),
                                         size: "small",
                                         variant: "outlined",
                                         sx: { 
@@ -2755,7 +2738,7 @@
                                                     alt: '한국',
                                                     style: { width: '16px', height: '12px' }
                                                 }),
-                                                React.createElement('span', null, t('korean'))
+                                                React.createElement('span', null, t('common.korean'))
                                             )
                                         ),
                                         React.createElement(MaterialUI.MenuItem, { value: "en", sx: { fontSize: '0.875rem' } },
@@ -2765,7 +2748,97 @@
                                                     alt: '미국',
                                                     style: { width: '16px', height: '12px' }
                                                 }),
-                                                React.createElement('span', null, t('english'))
+                                                React.createElement('span', null, t('common.english'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "ja", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/jp.png',
+                                                    alt: '일본',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.japanese'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "zh-CN", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/cn.png',
+                                                    alt: '중국',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.chinese_simplified'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "zh-TW", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/tw.png',
+                                                    alt: '대만',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.chinese_traditional'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "es", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/es.png',
+                                                    alt: '스페인',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.spanish'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "fr", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/fr.png',
+                                                    alt: '프랑스',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.french'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "de", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/de.png',
+                                                    alt: '독일',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.german'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "ru", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/ru.png',
+                                                    alt: '러시아',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.russian'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "pt", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/pt.png',
+                                                    alt: '포르투갈',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.portuguese'))
+                                            )
+                                        ),
+                                        React.createElement(MaterialUI.MenuItem, { value: "it", sx: { fontSize: '0.875rem' } },
+                                            React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
+                                                React.createElement('img', { 
+                                                    src: 'https://flagcdn.com/16x12/it.png',
+                                                    alt: '이탈리아',
+                                                    style: { width: '16px', height: '12px' }
+                                                }),
+                                                React.createElement('span', null, t('common.italian'))
                                             )
                                         )
                                     )
@@ -2797,7 +2870,14 @@
             );
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(EncoderDecoderTabs));
+        // React 앱을 I18nextProvider로 감싸서 렌더링
+        const AppWithI18n = React.createElement(
+            ReactI18next.I18nextProvider,
+            { i18n: i18next },
+            React.createElement(EncoderDecoderTabs)
+        );
+        
+        ReactDOM.createRoot(document.getElementById('root')).render(AppWithI18n);
 
         // base64 helper 함수 (이미 위로 이동되어 주석만 남음)
     </script>

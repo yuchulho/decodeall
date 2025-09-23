@@ -1,0 +1,75 @@
+{
+  "title": "Détection Automatique d'Encodage et Décodeur",
+  "tabs": {
+    "decoder": "Décodeur",
+    "encoder": "Encodeur"
+  },
+  "decoder": {
+    "inputLabel": "Entrez le texte à décoder",
+    "inputPlaceholder": "Saisie directe | Glisser-déposer | Utilisez le bouton de chargement de fichier pour saisir du texte...",
+    "outputLabel": "Résultat du décodage",
+    "encodingTypeLabel": "Encodage détecté",
+    "beautifyLabel": "Embellir",
+    "hexViewLabel": "Vue HEX",
+    "imageViewLabel": "Vue d'image",
+    "description": "Le décodeur automatique détecte la méthode d'encodage du texte saisi et le restaure au texte original.",
+    "copyTooltip": "Copier le résultat du décodage",
+    "downloadTooltip": "Enregistrer le résultat du décodage dans un fichier",
+    "binaryOutputLabel": "Sortie de données binaires",
+    "imageSaveTooltip": "Enregistrer l'image dans un fichier"
+  },
+  "encoder": {
+    "inputLabel": "Entrez le texte à encoder",
+    "inputPlaceholder": "Saisie directe | Glisser-déposer | Utilisez le bouton de chargement de fichier pour saisir du texte...",
+    "resultLabel": "Résultat de l'encodage",
+    "algorithmDescription": "Description de l'algorithme",
+    "description": "Vous pouvez sélectionner divers algorithmes pour encoder le texte dans le format souhaité.",
+    "textInputLabel": "Saisie de texte brut",
+    "copyTooltip": "Copier le résultat de l'encodage",
+    "downloadTooltip": "Enregistrer le résultat de l'encodage dans un fichier"
+  },
+  "buttons": {
+    "copy": "Copier",
+    "download": "Enregistrer le fichier",
+    "paste": "Coller",
+    "clear": "Effacer",
+    "fileLoad": "Charger le fichier",
+    "inputClear": "Effacer la saisie",
+    "hexCopy": "Copier Hex",
+    "imageSave": "Enregistrer le fichier"
+  },
+  "messages": {
+    "copySuccess": "Copié dans le presse-papiers.",
+    "copyError": "Échec de la copie.",
+    "binaryNotCopyable": "Les données binaires ne peuvent pas être copiées.",
+    "downloadSuccess": "Fichier enregistré avec succès.",
+    "downloadError": "Échec de l'enregistrement du fichier.",
+    "pasteSuccess": "Collage terminé",
+    "pasteError": "Échec du collage.",
+    "clearSuccess": "Contenu effacé.",
+    "imageSaveSuccess": "Image enregistrée avec succès.",
+    "cannotDecode": "Impossible de décoder les données.",
+    "noData": "Aucune donnée à décoder."
+  },
+  "common": {
+    "privacyNote": "La saisie est traitée uniquement dans le navigateur et n'est pas stockée.",
+    "supportedEncodings": "Encodages pris en charge",
+    "cborDecoded": "Résultat du décodage CBOR",
+    "cborDiagnosticNotation": "Notation de diagnostic CBOR",
+    "language": "Langue",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "Déposez les fichiers ici pour saisir le contenu",
+    "binaryDataDescription": "Données binaires (y compris les caractères de contrôle non visibles).",
+    "selectEncoding": "Sélectionner la méthode d'encodage"
+  }
+}

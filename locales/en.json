@@ -1,0 +1,75 @@
+{
+  "title": "Auto Encoding Detection & Decoder",
+  "tabs": {
+    "decoder": "Decoder",
+    "encoder": "Encoder"
+  },
+  "decoder": {
+    "inputLabel": "Enter text to decode",
+    "inputPlaceholder": "Direct input | Drag & Drop | Use file load button to input text...",
+    "outputLabel": "Decoding result",
+    "encodingTypeLabel": "Detected encoding",
+    "beautifyLabel": "Beautify",
+    "hexViewLabel": "HEX View",
+    "imageViewLabel": "Image View",
+    "description": "Auto decoder detects the encoding method of input text and restores it to original text.",
+    "copyTooltip": "Copy decoding result",
+    "downloadTooltip": "Save decoding result to file",
+    "binaryOutputLabel": "Binary data output",
+    "imageSaveTooltip": "Save image to file"
+  },
+  "encoder": {
+    "inputLabel": "Enter text to encode",
+    "inputPlaceholder": "Direct input | Drag & Drop | Use file load button to input text...",
+    "resultLabel": "Encoding result",
+    "algorithmDescription": "Algorithm description",
+    "description": "You can select various algorithms to encode text in your desired format.",
+    "textInputLabel": "Plain text input",
+    "copyTooltip": "Copy encoding result",
+    "downloadTooltip": "Save encoding result to file"
+  },
+  "buttons": {
+    "copy": "Copy",
+    "download": "Save File",
+    "paste": "Paste",
+    "clear": "Clear",
+    "fileLoad": "File Load",
+    "inputClear": "Clear Input",
+    "hexCopy": "Hex Copy",
+    "imageSave": "Save File"
+  },
+  "messages": {
+    "copySuccess": "Copied to clipboard.",
+    "copyError": "Failed to copy.",
+    "binaryNotCopyable": "Binary data cannot be copied.",
+    "downloadSuccess": "File saved successfully.",
+    "downloadError": "Failed to save file.",
+    "pasteSuccess": "Paste completed",
+    "pasteError": "Failed to paste.",
+    "clearSuccess": "Content cleared.",
+    "imageSaveSuccess": "Image saved successfully.",
+    "cannotDecode": "Cannot decode the data.",
+    "noData": "No data to decode."
+  },
+  "common": {
+    "privacyNote": "Input is processed only in browser and not stored.",
+    "supportedEncodings": "Supported Encodings",
+    "cborDecoded": "CBOR Decoding Result",
+    "cborDiagnosticNotation": "CBOR Diagnostic Notation",
+    "language": "Language",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "Drop files here to input content",
+    "binaryDataDescription": "Binary data (including non-visible control characters).",
+    "selectEncoding": "Select encoding method"
+  }
+}

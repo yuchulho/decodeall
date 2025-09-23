@@ -1,0 +1,75 @@
+{
+  "title": "自動編碼檢測與解碼器",
+  "tabs": {
+    "decoder": "解碼器",
+    "encoder": "編碼器"
+  },
+  "decoder": {
+    "inputLabel": "輸入要解碼的文字",
+    "inputPlaceholder": "直接輸入 | 拖拽檔案 | 使用檔案載入按鈕輸入文字...",
+    "outputLabel": "解碼結果",
+    "encodingTypeLabel": "檢測到的編碼",
+    "beautifyLabel": "美化",
+    "hexViewLabel": "十六進位檢視",
+    "imageViewLabel": "圖像檢視",
+    "description": "自動解碼器檢測輸入文字的編碼方式並將其還原為原始文字。",
+    "copyTooltip": "複製解碼結果",
+    "downloadTooltip": "將解碼結果儲存到檔案",
+    "binaryOutputLabel": "二進位資料輸出",
+    "imageSaveTooltip": "將圖像儲存到檔案"
+  },
+  "encoder": {
+    "inputLabel": "輸入要編碼的文字",
+    "inputPlaceholder": "直接輸入 | 拖拽檔案 | 使用檔案載入按鈕輸入文字...",
+    "resultLabel": "編碼結果",
+    "algorithmDescription": "演算法說明",
+    "description": "您可以選擇各種演算法以所需的方式對文字進行編碼。",
+    "textInputLabel": "純文字輸入",
+    "copyTooltip": "複製編碼結果",
+    "downloadTooltip": "將編碼結果儲存到檔案"
+  },
+  "buttons": {
+    "copy": "複製",
+    "download": "儲存檔案",
+    "paste": "貼上",
+    "clear": "清除",
+    "fileLoad": "載入檔案",
+    "inputClear": "清除輸入",
+    "hexCopy": "複製十六進位",
+    "imageSave": "儲存檔案"
+  },
+  "messages": {
+    "copySuccess": "已複製。",
+    "copyError": "複製失敗。",
+    "binaryNotCopyable": "無法複製二進位資料。",
+    "downloadSuccess": "檔案已儲存。",
+    "downloadError": "檔案儲存失敗。",
+    "pasteSuccess": "貼上完成",
+    "pasteError": "貼上失敗。",
+    "clearSuccess": "內容已清除。",
+    "imageSaveSuccess": "圖像已儲存。",
+    "cannotDecode": "無法解碼此資料。",
+    "noData": "沒有要解碼的資料。"
+  },
+  "common": {
+    "privacyNote": "輸入僅在瀏覽器中處理，不會被儲存。",
+    "supportedEncodings": "支援的編碼",
+    "cborDecoded": "CBOR解碼結果",
+    "cborDiagnosticNotation": "CBOR診斷記法",
+    "language": "語言",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "將檔案拖拽到此處即可輸入內容",
+    "binaryDataDescription": "二進位（包含不可見控制字元）資料。",
+    "selectEncoding": "選擇編碼方式"
+  }
+}

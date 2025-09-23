@@ -1,0 +1,75 @@
+{
+  "title": "自動エンコーディング検出とデコーダー",
+  "tabs": {
+    "decoder": "デコーダー",
+    "encoder": "エンコーダー"
+  },
+  "decoder": {
+    "inputLabel": "デコードするテキストを入力",
+    "inputPlaceholder": "直接入力 | ドラッグ＆ドロップ | ファイル読み込みボタンでテキストを入力してください...",
+    "outputLabel": "デコード結果",
+    "encodingTypeLabel": "検出されたエンコーディング",
+    "beautifyLabel": "整形",
+    "hexViewLabel": "HEX表示",
+    "imageViewLabel": "画像表示",
+    "description": "自動デコーダーが入力されたテキストのエンコーディング方式を検出し、元のテキストに復元します。",
+    "copyTooltip": "デコード結果をコピー",
+    "downloadTooltip": "デコード結果をファイルに保存",
+    "binaryOutputLabel": "バイナリデータ出力",
+    "imageSaveTooltip": "画像をファイルに保存"
+  },
+  "encoder": {
+    "inputLabel": "エンコードするテキストを入力",
+    "inputPlaceholder": "直接入力 | ドラッグ＆ドロップ | ファイル読み込みボタンでテキストを入力してください...",
+    "resultLabel": "エンコード結果",
+    "algorithmDescription": "アルゴリズムの説明",
+    "description": "様々なアルゴリズムを選択してテキストを希望の方式でエンコードできます。",
+    "textInputLabel": "プレーンテキスト入力",
+    "copyTooltip": "エンコード結果をコピー",
+    "downloadTooltip": "エンコード結果をファイルに保存"
+  },
+  "buttons": {
+    "copy": "コピー",
+    "download": "ファイルに保存",
+    "paste": "貼り付け",
+    "clear": "クリア",
+    "fileLoad": "ファイル読み込み",
+    "inputClear": "入力をクリア",
+    "hexCopy": "Hexコピー",
+    "imageSave": "ファイルに保存"
+  },
+  "messages": {
+    "copySuccess": "コピーしました。",
+    "copyError": "コピーに失敗しました。",
+    "binaryNotCopyable": "バイナリデータはコピーできません。",
+    "downloadSuccess": "ファイルを保存しました。",
+    "downloadError": "ファイル保存に失敗しました。",
+    "pasteSuccess": "貼り付け完了",
+    "pasteError": "貼り付けに失敗しました。",
+    "clearSuccess": "内容をクリアしました。",
+    "imageSaveSuccess": "画像を保存しました。",
+    "cannotDecode": "デコードできないデータです。",
+    "noData": "デコードするデータがありません。"
+  },
+  "common": {
+    "privacyNote": "入力値はブラウザでのみ処理され、保存されません。",
+    "supportedEncodings": "サポートされているエンコーディング",
+    "cborDecoded": "CBORデコード結果",
+    "cborDiagnosticNotation": "CBOR診断記法",
+    "language": "言語",
+    "korean": "한국어",
+    "english": "English",
+    "japanese": "日本語",
+    "chinese_simplified": "简体中文",
+    "chinese_traditional": "繁體中文",
+    "spanish": "Español",
+    "french": "Français",
+    "german": "Deutsch",
+    "russian": "Русский",
+    "portuguese": "Português",
+    "italian": "Italiano",
+    "dragMessage": "ここにファイルをドロップすると内容が入力されます",
+    "binaryDataDescription": "バイナリ（非表示制御文字を含む）データです。",
+    "selectEncoding": "エンコーディング方式を選択"
+  }
+}
