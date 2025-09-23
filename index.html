@@ -133,18 +133,17 @@
             smallButton: {
                 fontSize: { xs: '0.875rem', md: '0.8125rem' },
                 padding: { xs: '8px 16px', md: '6px 12px' },
-                minHeight: { xs: 36, md: 32 },
                 verticalAlign: 'middle'
             },
             
             // 칩 스타일
             chip: {
-                fontSize: { xs: '0.8125rem', md: '0.75rem' },
-                height: { xs: 28, md: 24 },
+                fontSize: { xs: '0.75rem', md: '0.75rem' },
+                height: { xs: 26, md: 24 },
                 '& .MuiChip-label': {
-                    paddingLeft: { xs: 10, md: 8 },
-                    paddingRight: { xs: 10, md: 8 },
-                    fontSize: { xs: '0.8125rem', md: '0.75rem' }
+                    paddingLeft: { xs: 6, md: 8 },
+                    paddingRight: { xs: 6, md: 8 },
+                    fontSize: { xs: '0.75rem', md: '0.75rem' }
                 }
             },
             
@@ -1322,7 +1321,7 @@
                 
                 // 버튼
                 copyButton: "복사",
-                downloadButton: "파일 저장",
+                downloadButton: "파일로 저장",
                 pasteButton: "붙여넣기",
                 clearButton: "지우기",
                 
@@ -2025,7 +2024,8 @@
                                             color: "primary",
                                             size: "small",
                                             startIcon: React.createElement("span", { className: "material-icons" }, "upload_file"),
-                                            onClick: () => handleFileSelect(setInput)
+                                            onClick: () => handleFileSelect(setInput),
+                                            sx: commonStyles.smallButton
                                         },
                                         "파일 로드"
                                     ),
@@ -2037,7 +2037,8 @@
                                             size: "small",
                                             startIcon: React.createElement("span", { className: "material-icons" }, "clear"),
                                             onClick: () => setInput(''),
-                                            disabled: !input
+                                            disabled: !input,
+                                            sx: commonStyles.smallButton
                                         },
                                         "입력 초기화"
                                     )
@@ -2104,16 +2105,49 @@
                                         }
                                     }, `${bytesLen(input)} bytes`)
                                 ),
-                                React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
-                                    encoding && React.createElement(Chip, {
-                                        label: `${t('encodingTypeLabel')}: ${encoding}`,
-                                        color: encoding === 'Plain Text' ? 'default' : 'primary',
-                                        variant: "outlined",
-                                        sx: { 
-                                            ...commonStyles.chip,
-                                            mr: 1
+                                // 감지된 인코딩 정보
+                                encoding && React.createElement(MaterialUI.Alert, {
+                                    severity: "info",
+                                    variant: "outlined",
+                                    sx: {
+                                        mb: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        borderWidth: 1.5,
+                                        borderColor: encoding === 'Plain Text' ? '#757575' : '#1976d2',
+                                        color: encoding === 'Plain Text' ? '#757575' : '#1976d2',
+                                        backgroundColor: 'transparent',
+                                        borderRadius: 2,
+                                        fontSize: { xs: '0.85rem', md: '0.875rem' },
+                                        padding: { xs: '8px 12px', md: '10px 14px' },
+                                        '& .MuiTypography-body2': {
+                                            fontSize: { xs: '0.85rem', md: '0.875rem' }
                                         }
-                                    }),
+                                    },
+                                    icon: React.createElement("span", { 
+                                        className: "material-icons", 
+                                        style: { 
+                                            color: encoding === 'Plain Text' ? '#757575' : '#1976d2',
+                                            fontSize: '18px'
+                                        } 
+                                    }, "info")
+                                },
+                                    React.createElement(Typography, { 
+                                        variant: "body2", 
+                                        sx: { fontWeight: 600 } 
+                                    }, `${t('encodingTypeLabel')}: ${encoding}`)
+                                ),
+                                // 복사/파일저장 버튼들
+                                React.createElement(Box, { 
+                                    sx: { 
+                                        mb: 2, 
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-end',
+                                        gap: 1
+                                    } 
+                                },
                                     React.createElement(
                                         Tooltip,
                                         { title: "디코딩 결과 복사" },
@@ -2129,8 +2163,7 @@
                                                     startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                     onClick: () => handleCopy(output, dataFormat === 'binary'),
                                                     sx: { 
-                                                        ...commonStyles.smallButton,
-                                                        mr: 1
+                                                        ...commonStyles.smallButton
                                                     },
                                                     disabled: !output
                                                 },
@@ -2290,14 +2323,11 @@
                                                                         document.body.removeChild(a);
                                                                         showToast(t('imageSaveSuccess'), 'success');
                                                                     },
-                                                                    sx: { 
-                                                                        verticalAlign: 'middle',
-                                                                        fontSize: { xs: '0.875rem', md: '0.8125rem' },
-                                                                        padding: { xs: '8px 16px', md: '6px 12px' },
-                                                                        minHeight: { xs: 36, md: 32 }
+                                                                    sx: {
+                                                                        ...commonStyles.smallButton
                                                                     }
                                                                 },
-                                                                "이미지 저장"
+                                                                "파일로 저장"
                                                             )
                                                         )
                                                     )
@@ -2327,7 +2357,16 @@
                                 // CBOR Diagnostic Notation 결과
                                 dataFormat === 'binary' && binaryFormat === 'cbor' && cborDiagnostic && React.createElement(Box, { sx: { mt: 2 } },
                                     // 복사/다운로드 버튼들 (메인 스타일과 동일)
-                                    React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                    React.createElement(Box, { 
+                                        sx: { 
+                                            mb: 2, 
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-end',
+                                            gap: 1
+                                        } 
+                                    },
                                         React.createElement(
                                             Tooltip,
                                             { title: "CBOR 진단 표기 결과 복사" },
@@ -2342,13 +2381,7 @@
                                                         variant: "outlined",
                                                         startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                         onClick: () => handleCopy(cborDiagnostic),
-                                                        sx: { 
-                                                            verticalAlign: 'middle', 
-                                                            mr: 1,
-                                                            fontSize: { xs: '0.875rem', md: '0.8125rem' },
-                                                            padding: { xs: '8px 16px', md: '6px 12px' },
-                                                            minHeight: { xs: 36, md: 32 }
-                                                        },
+                                                        sx: commonStyles.smallButton,
                                                         disabled: !cborDiagnostic
                                                     },
                                                     t('copyButton')
@@ -2369,12 +2402,7 @@
                                                         variant: "outlined",
                                                         startIcon: React.createElement("span", { className: "material-icons" }, "download"),
                                                         onClick: () => handleDownload(cborDiagnostic, 'cbor_diagnostic_result.txt'),
-                                                        sx: { 
-                                                            verticalAlign: 'middle',
-                                                            fontSize: { xs: '0.875rem', md: '0.8125rem' },
-                                                            padding: { xs: '8px 16px', md: '6px 12px' },
-                                                            minHeight: { xs: 36, md: 32 }
-                                                        },
+                                                        sx: commonStyles.smallButton,
                                                         disabled: !cborDiagnostic
                                                     },
                                                     t('downloadButton')
@@ -2424,7 +2452,8 @@
                                             color: "primary",
                                             size: "small",
                                             startIcon: React.createElement("span", { className: "material-icons" }, "upload_file"),
-                                            onClick: () => handleFileSelect(setEncodeInput)
+                                            onClick: () => handleFileSelect(setEncodeInput),
+                                            sx: commonStyles.smallButton
                                         },
                                         "파일 로드"
                                     ),
@@ -2436,7 +2465,8 @@
                                             size: "small",
                                             startIcon: React.createElement("span", { className: "material-icons" }, "clear"),
                                             onClick: () => setEncodeInput(''),
-                                            disabled: !encodeInput
+                                            disabled: !encodeInput,
+                                            sx: commonStyles.smallButton
                                         },
                                         "입력 초기화"
                                     )
@@ -2544,7 +2574,16 @@
                                 ),
 
                                 // 결과 복사
-                                React.createElement(Box, { sx: { mb: 2, textAlign: 'right' } },
+                                React.createElement(Box, { 
+                                    sx: { 
+                                        mb: 2, 
+                                        display: 'flex',
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-end',
+                                        gap: 1
+                                    } 
+                                },
                                     React.createElement(
                                         Tooltip,
                                         { title: "인코딩 결과 복사" },
@@ -2559,7 +2598,7 @@
                                                     variant: "outlined",
                                                     startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                     onClick: () => handleCopy(encodeResult, isBinaryString(encodeResult, 0.1)),
-                                                    sx: { verticalAlign: 'middle', mr: 1 },
+                                                    sx: commonStyles.smallButton,
                                                     disabled: !encodeResult
                                                 },
                                                 t('copyButton')
@@ -2587,7 +2626,7 @@
                                                             handleDownload(encodeResult, `encoded_${encodingType}_result.txt`, false);
                                                         }
                                                     },
-                                                    sx: { verticalAlign: 'middle' },
+                                                    sx: commonStyles.smallButton,
                                                     disabled: !encodeResult
                                                 },
                                                 t('downloadButton')
@@ -2609,7 +2648,16 @@
                                 
                                 // CBOR 인코딩 시 hex 결과 표시
                                 encodeType === 'CBOR' && encodeHexResult ? React.createElement(Box, { sx: { mb: 2 } },
-                                    React.createElement(Box, { sx: { mb: 1, textAlign: 'right' } },
+                                    React.createElement(Box, { 
+                                        sx: { 
+                                            mb: 1, 
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            justifyContent: 'flex-end',
+                                            gap: 1
+                                        } 
+                                    },
                                         React.createElement(
                                             Tooltip,
                                             { title: "Hex 결과 복사" },
@@ -2621,7 +2669,7 @@
                                                     variant: "outlined",
                                                     startIcon: React.createElement("span", { className: "material-icons" }, "content_copy"),
                                                     onClick: () => handleCopy(encodeHexResult),
-                                                    sx: { verticalAlign: 'middle', mr: 1 },
+                                                    sx: commonStyles.smallButton,
                                                     disabled: !encodeHexResult
                                                 },
                                                 "Hex 복사"
@@ -2638,10 +2686,10 @@
                                                     variant: "outlined",
                                                     startIcon: React.createElement("span", { className: "material-icons" }, "download"),
                                                     onClick: () => handleDownload(encodeHexResult, 'cbor_hex_result.txt'),
-                                                    sx: { verticalAlign: 'middle' },
+                                                    sx: commonStyles.smallButton,
                                                     disabled: !encodeHexResult
                                                 },
-                                                "Hex 저장"
+                                                "파일로 저장"
                                             )
                                         )
                                     ),
