@@ -71,5 +71,18 @@
     "dragMessage": "將檔案拖拽到此處即可輸入內容",
     "binaryDataDescription": "二進位（包含不可見控制字元）資料。",
     "selectEncoding": "選擇編碼方式"
+  },
+  "codecDescriptions": {
+    "CBOR": "CBOR（緊湊二進位物件表示）是RFC 8949中定義的二進位資料序列化格式。它比JSON更高效，支援各種資料類型（整數、浮點數、位元組陣列、日期等）。用作IoT、Web API、資料儲存等領域中JSON的替代方案。",
+    "Hex (Base16)": "Hex（十六進位/Base16）編碼是將每個位元組（8位元）表示為兩個十六進位字元（0-9，A-F）的方式。用於將二進位資料安全地以文字形式傳輸或儲存，常見於顏色代碼（#FF0000）、MAC位址、加密雜湊值等。例：'A' → 41，'ABC' → 414243",
+    "Base64": "Base64使用64個安全的ASCII字元（A-Z，a-z，0-9，+，/）對8位元二進位資料進行編碼。廣泛用於電子郵件附件、Web資料URL（data:image/png;base64,...）、JSON Web Token、API通訊等。將3個位元組轉換為4個字元，因此大小增加約33%。",
+    "Base64URL": "Base64URL是Base64的URL安全變體，替換了在URL和檔案名稱中有問題的字元。將'+'替換為'-'，'/'替換為'_'，並刪除填充（'='）。用於在JWT（JSON Web Token）、OAuth權杖、URL參數中安全傳輸二進位資料。",
+    "URL Encoding": "URL編碼（百分號編碼）將在URL中具有特殊含義或不安全的字元轉換為%XX格式。空格變為%20，中文轉換為UTF-8後每個位元組表示為%XX。在Web表單資料傳輸、查詢字串、REST API中必不可少。例：'你好' → %E4%BD%A0%E5%A5%BD",
+    "HTML Entities": "HTML實體用於安全表示在HTML中具有特殊含義的字元。編碼為&lt;（<）、&gt;（>）、&amp;（&）、&quot;（\"）、&#數字; 格式。用於Web開發中的XSS攻擊防護、XML/HTML文件中的特殊字元顯示、電子郵件HTML範本等。",
+    "Unicode Escape (\\uXXXX)": "Unicode轉義將Unicode字元表示為\\uXXXX格式的4位十六進位數。在JavaScript、JSON、Java、C#等程式語言中用於安全表示非ASCII字元。例：'中' → \\u4E2D，'☃' → \\u2603。在國際化（i18n）檔案或日誌分析中經常遇到。",
+    "UTF-8": "UTF-8使用1-4個位元組的可變長度對Unicode字元進行編碼。完全相容ASCII（ASCII字元為1個位元組），可以表示世界上所有語言，是Web的標準編碼。中文通常編碼為3個位元組。例：'A' → 0x41（1個位元組），'中' → 0xE4 0xB8 0xAD（3個位元組）",
+    "Quoted-Printable": "Quoted-Printable是為電子郵件傳輸設計的編碼方式，將非ASCII字元表示為=XX格式。保持ASCII文字的可讀性，同時安全編碼特殊字元。主要用於電子郵件MIME編碼和HTTP標頭。例：'=' → =3D，中文字元 → =E4=B8=AD",
+    "JWT": "JWT（JSON Web Token）是用於在各方之間安全傳輸資訊的緊湊、URL安全的權杖格式。由點分隔的三部分組成：Header.Payload.Signature。用於Web應用程式和API中的身份驗證、授權和資訊交換。",
+    "Plain Text": "純文字不進行任何解碼直接顯示輸入。當輸入不符合任何特定編碼格式或想直接檢視原始文字時使用。"
   }
 }

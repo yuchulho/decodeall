@@ -71,5 +71,20 @@
     "dragMessage": "Drop files here to input content",
     "binaryDataDescription": "Binary data (including non-visible control characters).",
     "selectEncoding": "Select encoding method"
+  },
+  "codecDescriptions": {
+    "CBOR": "CBOR (Concise Binary Object Representation) is a binary data serialization format defined in RFC 8949. It's more efficient than JSON and supports various data types (integers, floating-point numbers, byte arrays, dates, etc.). Used as an alternative to JSON in IoT, web APIs, data storage, etc.",
+    "Hex (Base16)": "Hex (hexadecimal/Base16) encoding represents each byte (8 bits) as two hexadecimal characters (0-9, A-F). Used for safely transmitting or storing binary data as text, commonly seen in color codes (#FF0000), MAC addresses, cryptographic hash values, etc. Example: 'A' → 41, 'ABC' → 414243",
+    "Base64": "Base64 encodes 8-bit binary data using 64 safe ASCII characters (A-Z, a-z, 0-9, +, /). Widely used in email attachments, web data URLs (data:image/png;base64,...), JSON Web Tokens, API communications, etc. Converts 3 bytes to 4 characters, increasing size by about 33%.",
+    "Base64URL": "Base64URL is a URL-safe variant of Base64, replacing characters that cause problems in URLs and filenames. Replaces '+' with '-', '/' with '_', and removes padding ('='). Used for safely transmitting binary data in JWT (JSON Web Token), OAuth tokens, URL parameters.",
+    "URL Encoding": "URL Encoding (percent encoding) converts characters that have special meaning or are unsafe in URLs to %XX format. Spaces become %20, Korean text is converted to UTF-8 and each byte is represented as %XX. Essential for web form data transmission, query strings, REST APIs. Example: '안녕' → %EC%95%88%EB%85%95",
+    "HTML Entities": "HTML Entities are used to safely represent characters that have special meaning in HTML. Encoded as &lt;(<), &gt;(>), &amp;(&), &quot;(\"), &#number; format. Used for XSS attack prevention in web development, displaying special characters in XML/HTML documents, email HTML templates.",
+    "Unicode Escape (\\uXXXX)": "Unicode Escape represents Unicode characters as \\uXXXX format with 4-digit hexadecimal. Used for safely representing non-ASCII characters in programming languages like JavaScript, JSON, Java, C#. Example: '가' → \\uAC00, '☃' → \\u2603. Often encountered in internationalization (i18n) files or log analysis.",
+    "UTF-8": "UTF-8 encodes Unicode characters with variable length 1-4 bytes. Fully compatible with ASCII (ASCII characters are 1 byte), can represent all languages worldwide, making it the web standard encoding. Korean is usually encoded as 3 bytes. Example: 'A' → 0x41 (1 byte), '가' → 0xEA 0xB0 0x80 (3 bytes)",
+    "ASCII": "ASCII (American Standard Code for Information Interchange) is the most basic character encoding that represents English alphabet, numbers, and basic special characters with 7 bits (0-127). Established in 1963, it became the foundation of all modern encodings and is fully compatible with UTF-8. Still used in legacy systems or limited environments.",
+    "Base32": "Base32 encodes data by grouping 5 bits and using 32 characters (A-Z, 2-7). Uses fewer characters than Base64, doesn't require case sensitivity, and excludes confusing characters (0, 1, 8, 9) for better safety. Used in TOTP authentication secret keys, Git commit hashes, distributed system IDs, etc. Converts 8 bytes to 5 characters, increasing size by about 60%.",
+    "Quoted-Printable": "Quoted-Printable is an encoding method designed for email transmission, representing non-ASCII characters as =XX format. Maintains readability of ASCII text while safely encoding special characters. Primarily used in email MIME encoding and HTTP headers. Example: '=' → =3D, Korean characters → =EC=95=88=EB=85=95",
+    "Binary": "Binary data (including non-visible control characters).",
+    "Plain Text": "Plain Text displays input as-is without any decoding. Used when input doesn't match any specific encoding format or when you want to view the original text directly."
   }
 }

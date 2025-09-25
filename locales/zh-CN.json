@@ -71,5 +71,18 @@
     "dragMessage": "将文件拖拽到此处即可输入内容",
     "binaryDataDescription": "二进制（包含不可见控制字符）数据。",
     "selectEncoding": "选择编码方式"
+  },
+  "codecDescriptions": {
+    "CBOR": "CBOR（紧凑二进制对象表示）是RFC 8949中定义的二进制数据序列化格式。它比JSON更高效，支持各种数据类型（整数、浮点数、字节数组、日期等）。用作IoT、Web API、数据存储等领域中JSON的替代方案。",
+    "Hex (Base16)": "Hex（十六进制/Base16）编码是将每个字节（8位）表示为两个十六进制字符（0-9，A-F）的方式。用于将二进制数据安全地以文本形式传输或存储，常见于颜色代码（#FF0000）、MAC地址、加密哈希值等。例：'A' → 41，'ABC' → 414243",
+    "Base64": "Base64使用64个安全的ASCII字符（A-Z，a-z，0-9，+，/）对8位二进制数据进行编码。广泛用于电子邮件附件、Web数据URL（data:image/png;base64,...）、JSON Web Token、API通信等。将3字节转换为4字符，因此大小增加约33%。",
+    "Base64URL": "Base64URL是Base64的URL安全变体，替换了在URL和文件名中有问题的字符。将'+'替换为'-'，'/'替换为'_'，并删除填充（'='）。用于在JWT（JSON Web Token）、OAuth令牌、URL参数中安全传输二进制数据。",
+    "URL Encoding": "URL编码（百分号编码）将在URL中具有特殊含义或不安全的字符转换为%XX格式。空格变为%20，中文转换为UTF-8后每个字节表示为%XX。在Web表单数据传输、查询字符串、REST API中必不可少。例：'你好' → %E4%BD%A0%E5%A5%BD",
+    "HTML Entities": "HTML实体用于安全表示在HTML中具有特殊含义的字符。编码为&lt;（<）、&gt;（>）、&amp;（&）、&quot;（\"）、&#数字; 格式。用于Web开发中的XSS攻击防护、XML/HTML文档中的特殊字符显示、电子邮件HTML模板等。",
+    "Unicode Escape (\\uXXXX)": "Unicode转义将Unicode字符表示为\\uXXXX格式的4位十六进制数。在JavaScript、JSON、Java、C#等编程语言中用于安全表示非ASCII字符。例：'中' → \\u4E2D，'☃' → \\u2603。在国际化（i18n）文件或日志分析中经常遇到。",
+    "UTF-8": "UTF-8使用1-4字节可变长度对Unicode字符进行编码。完全兼容ASCII（ASCII字符为1字节），可以表示世界上所有语言，是Web的标准编码。中文通常编码为3字节。例：'A' → 0x41（1字节），'中' → 0xE4 0xB8 0xAD（3字节）",
+    "Quoted-Printable": "Quoted-Printable是为电子邮件传输设计的编码方式，将非ASCII字符表示为=XX格式。保持ASCII文本的可读性，同时安全编码特殊字符。主要用于电子邮件MIME编码和HTTP头。例：'=' → =3D，中文字符 → =E4=B8=AD",
+    "JWT": "JWT（JSON Web Token）是用于在各方之间安全传输信息的紧凑、URL安全的令牌格式。由点分隔的三部分组成：Header.Payload.Signature。用于Web应用程序和API中的身份验证、授权和信息交换。",
+    "Plain Text": "纯文本不进行任何解码直接显示输入。当输入不匹配任何特定编码格式或想直接查看原始文本时使用。"
   }
 }
