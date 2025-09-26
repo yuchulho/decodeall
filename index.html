@@ -3,7 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>자동 인코딩 감지 & 디코더</title>
+    <title>Auto Encoding Detection & Decoder</title>
+    <meta name="description" content="다양한 인코딩 형식(UTF-8, EUC-KR, Base64, URL 인코딩 등)을 자동으로 감지하고 변환하는 무료 온라인 도구입니다.">
+    <meta name="keywords" content="인코딩, 디코딩, UTF-8, EUC-KR, Base64, URL 인코딩, 텍스트 변환, 한글 인코딩">
+    <meta name="author" content="yuchulho">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yuchulho.github.io/decodeall/">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yuchulho.github.io/decodeall/">
+    <meta property="og:title" content="자동 인코딩 감지 & 디코더">
+    <meta property="og:description" content="다양한 인코딩 형식을 자동으로 감지하고 변환하는 무료 온라인 도구">
+    <meta property="og:locale" content="ko_KR">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:url" content="https://yuchulho.github.io/decodeall/">
+    <meta property="twitter:title" content="자동 인코딩 감지 & 디코더">
+    <meta property="twitter:description" content="다양한 인코딩 형식을 자동으로 감지하고 변환하는 무료 온라인 도구">
     <!-- Material UI CDN -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
@@ -1374,7 +1392,43 @@
             useEffect(() => {
                 loadLanguageResources().then((success) => {
                     if (success) {
-                        i18n.changeLanguage(language);
+                        i18n.changeLanguage(language).then(() => {
+                            // 초기 로드 시 페이지 제목과 메타 태그 업데이트
+                            document.title = i18n.t('title');
+                            
+                            // 메타 태그 업데이트
+                            const descriptionMeta = document.querySelector('meta[name="description"]');
+                            if (descriptionMeta) {
+                                descriptionMeta.content = i18n.t('meta.description');
+                            }
+                            
+                            const keywordsMeta = document.querySelector('meta[name="keywords"]');
+                            if (keywordsMeta) {
+                                keywordsMeta.content = i18n.t('meta.keywords');
+                            }
+                            
+                            // Open Graph 메타 태그 업데이트
+                            const ogTitle = document.querySelector('meta[property="og:title"]');
+                            if (ogTitle) {
+                                ogTitle.content = i18n.t('title');
+                            }
+                            
+                            const ogDescription = document.querySelector('meta[property="og:description"]');
+                            if (ogDescription) {
+                                ogDescription.content = i18n.t('meta.description');
+                            }
+                            
+                            // Twitter 메타 태그 업데이트
+                            const twitterTitle = document.querySelector('meta[property="twitter:title"]');
+                            if (twitterTitle) {
+                                twitterTitle.content = i18n.t('title');
+                            }
+                            
+                            const twitterDescription = document.querySelector('meta[property="twitter:description"]');
+                            if (twitterDescription) {
+                                twitterDescription.content = i18n.t('meta.description');
+                            }
+                        });
                         setIsLanguageLoaded(true);
                     }
                 });
@@ -1383,7 +1437,43 @@
             // 언어 변경 처리
             useEffect(() => {
                 if (isLanguageLoaded) {
-                    i18n.changeLanguage(language);
+                    i18n.changeLanguage(language).then(() => {
+                        // 언어 변경이 완료된 후 페이지 제목과 메타 태그 업데이트
+                        document.title = i18n.t('title');
+                        
+                        // 메타 태그 업데이트
+                        const descriptionMeta = document.querySelector('meta[name="description"]');
+                        if (descriptionMeta) {
+                            descriptionMeta.content = i18n.t('meta.description');
+                        }
+                        
+                        const keywordsMeta = document.querySelector('meta[name="keywords"]');
+                        if (keywordsMeta) {
+                            keywordsMeta.content = i18n.t('meta.keywords');
+                        }
+                        
+                        // Open Graph 메타 태그 업데이트
+                        const ogTitle = document.querySelector('meta[property="og:title"]');
+                        if (ogTitle) {
+                            ogTitle.content = i18n.t('title');
+                        }
+                        
+                        const ogDescription = document.querySelector('meta[property="og:description"]');
+                        if (ogDescription) {
+                            ogDescription.content = i18n.t('meta.description');
+                        }
+                        
+                        // Twitter 메타 태그 업데이트
+                        const twitterTitle = document.querySelector('meta[property="twitter:title"]');
+                        if (twitterTitle) {
+                            twitterTitle.content = i18n.t('title');
+                        }
+                        
+                        const twitterDescription = document.querySelector('meta[property="twitter:description"]');
+                        if (twitterDescription) {
+                            twitterDescription.content = i18n.t('meta.description');
+                        }
+                    });
                     localStorage.setItem('decodeall-language', language);
                 }
             }, [language, isLanguageLoaded]);

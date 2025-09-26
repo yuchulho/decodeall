@@ -1,5 +1,9 @@
 {
   "title": "自动编码检测和解码器",
+  "meta": {
+    "description": "免费在线工具，自动检测并转换各种编码格式（UTF-8、EUC-KR、Base64、URL编码等）。",
+    "keywords": "编码, 解码, UTF-8, EUC-KR, Base64, URL编码, 文本转换, 字符编码"
+  },
   "tabs": {
     "decoder": "解码器",
     "encoder": "编码器"

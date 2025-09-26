@@ -1,5 +1,9 @@
 {
   "title": "Automatische Kodierungserkennung und Dekoder",
+  "meta": {
+    "description": "Kostenloses Online-Tool zur automatischen Erkennung und Konvertierung verschiedener Kodierungsformate (UTF-8, EUC-KR, Base64, URL-Kodierung usw.).",
+    "keywords": "Kodierung, Dekodierung, UTF-8, EUC-KR, Base64, URL-Kodierung, Textkonvertierung, Zeichenkodierung"
+  },
   "tabs": {
     "decoder": "Dekoder",
     "encoder": "Enkoder"

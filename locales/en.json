@@ -1,5 +1,9 @@
 {
   "title": "Auto Encoding Detection & Decoder",
+  "meta": {
+    "description": "Free online tool that automatically detects and converts various encoding formats (UTF-8, EUC-KR, Base64, URL encoding, etc.).",
+    "keywords": "encoding, decoding, UTF-8, EUC-KR, Base64, URL encoding, text conversion, character encoding"
+  },
   "tabs": {
     "decoder": "Decoder",
     "encoder": "Encoder"

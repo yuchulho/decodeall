@@ -1,5 +1,9 @@
 {
   "title": "Detecção Automática de Codificação e Decodificador",
+  "meta": {
+    "description": "Ferramenta online gratuita que detecta e converte automaticamente vários formatos de codificação (UTF-8, EUC-KR, Base64, codificação URL, etc.).",
+    "keywords": "codificação, decodificação, UTF-8, EUC-KR, Base64, codificação URL, conversão de texto, codificação de caracteres"
+  },
   "tabs": {
     "decoder": "Decodificador",
     "encoder": "Codificador"

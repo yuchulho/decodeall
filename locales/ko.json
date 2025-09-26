@@ -1,5 +1,9 @@
 {
   "title": "자동 인코딩 감지 & 디코더",
+  "meta": {
+    "description": "다양한 인코딩 형식(UTF-8, EUC-KR, Base64, URL 인코딩 등)을 자동으로 감지하고 변환하는 무료 온라인 도구입니다.",
+    "keywords": "인코딩, 디코딩, UTF-8, EUC-KR, Base64, URL 인코딩, 텍스트 변환, 한글 인코딩"
+  },
   "tabs": {
     "decoder": "디코더",
     "encoder": "인코더"

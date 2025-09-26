@@ -1,5 +1,9 @@
 {
   "title": "Rilevamento Automatico Codifica e Decodificatore",
+  "meta": {
+    "description": "Strumento online gratuito che rileva e converte automaticamente vari formati di codifica (UTF-8, EUC-KR, Base64, codifica URL, ecc.).",
+    "keywords": "codifica, decodifica, UTF-8, EUC-KR, Base64, codifica URL, conversione testo, codifica caratteri"
+  },
   "tabs": {
     "decoder": "Decodificatore",
     "encoder": "Codificatore"

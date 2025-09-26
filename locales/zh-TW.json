@@ -1,5 +1,9 @@
 {
   "title": "自動編碼檢測與解碼器",
+  "meta": {
+    "description": "免費線上工具，自動檢測並轉換各種編碼格式（UTF-8、EUC-KR、Base64、URL編碼等）。",
+    "keywords": "編碼, 解碼, UTF-8, EUC-KR, Base64, URL編碼, 文字轉換, 字元編碼"
+  },
   "tabs": {
     "decoder": "解碼器",
     "encoder": "編碼器"

@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# 사이트맵 위치 지정
+Sitemap: https://yuchulho.github.io/decodeall/sitemap.xml
+
+# 검색 엔진이 크롤링하지 않을 디렉토리 (필요시)
+Disallow: /.git/
+Disallow: /.vscode/
+
+# 크롤링 지연 시간 (초 단위, 선택사항)
+Crawl-delay: 1
