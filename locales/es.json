@@ -1,8 +1,8 @@
 {
-  "title": "Detección Automática de Codificación y Decodificador",
+  "title": "Decodificador Auto Base64, CBOR, Hex, Codificación URL - Herramienta Gratuita",
   "meta": {
-    "description": "Herramienta en línea gratuita que detecta y convierte automáticamente varios formatos de codificación (UTF-8, EUC-KR, Base64, codificación URL, etc.).",
-    "keywords": "codificación, decodificación, UTF-8, EUC-KR, Base64, codificación URL, conversión de texto, codificación de caracteres"
+    "description": "Herramienta en línea gratuita que detecta y convierte automáticamente 12 formatos de codificación: Base64, CBOR, Hex, codificación URL, entidades HTML, UTF-8, ASCII, Base32 y más.",
+    "keywords": "decodificador Base64, decodificador CBOR, decodificador Hex, codificación URL, entidades HTML, UTF-8, ASCII, Base32, convertidor de codificación, decodificador de texto"
   },
   "tabs": {
     "decoder": "Decodificador",

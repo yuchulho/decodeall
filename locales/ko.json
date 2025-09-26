@@ -1,8 +1,8 @@
 {
-  "title": "자동 인코딩 감지 & 디코더",
+  "title": "Base64, CBOR, Hex, URL 인코딩 자동 감지 디코더 - 무료 온라인 변환 도구",
   "meta": {
-    "description": "다양한 인코딩 형식(UTF-8, EUC-KR, Base64, URL 인코딩 등)을 자동으로 감지하고 변환하는 무료 온라인 도구입니다.",
-    "keywords": "인코딩, 디코딩, UTF-8, EUC-KR, Base64, URL 인코딩, 텍스트 변환, 한글 인코딩"
+    "description": "Base64, CBOR, Hex, URL인코딩, HTML엔티티, UTF-8, ASCII 등 12가지 인코딩을 자동 감지하고 변환하는 무료 온라인 도구입니다.",
+    "keywords": "Base64 디코더, CBOR 디코더, Hex 디코더, URL 인코딩, HTML 엔티티, UTF-8, ASCII, Base32, 인코딩 변환, 텍스트 디코딩"
   },
   "tabs": {
     "decoder": "디코더",

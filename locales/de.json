@@ -1,8 +1,8 @@
 {
-  "title": "Automatische Kodierungserkennung und Dekoder",
+  "title": "Base64, CBOR, Hex, URL-Kodierung Auto-Dekoder - Kostenloses Online-Konverter-Tool",
   "meta": {
-    "description": "Kostenloses Online-Tool zur automatischen Erkennung und Konvertierung verschiedener Kodierungsformate (UTF-8, EUC-KR, Base64, URL-Kodierung usw.).",
-    "keywords": "Kodierung, Dekodierung, UTF-8, EUC-KR, Base64, URL-Kodierung, Textkonvertierung, Zeichenkodierung"
+    "description": "Kostenloses Online-Tool zur automatischen Erkennung und Konvertierung von 12 Kodierungsformaten: Base64, CBOR, Hex, URL-Kodierung, HTML-Entitäten, UTF-8, ASCII, Base32 und mehr.",
+    "keywords": "Base64 Dekoder, CBOR Dekoder, Hex Dekoder, URL-Kodierung, HTML-Entitäten, UTF-8, ASCII, Base32, Kodierungskonverter, Text-Dekoder"
   },
   "tabs": {
     "decoder": "Dekoder",

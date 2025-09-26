@@ -1,8 +1,8 @@
 {
-  "title": "自動編碼檢測與解碼器",
+  "title": "Base64, CBOR, Hex, URL編碼自動解碼器 - 免費線上轉換工具",
   "meta": {
-    "description": "免費線上工具，自動檢測並轉換各種編碼格式（UTF-8、EUC-KR、Base64、URL編碼等）。",
-    "keywords": "編碼, 解碼, UTF-8, EUC-KR, Base64, URL編碼, 文字轉換, 字元編碼"
+    "description": "免費線上工具，自動檢測並轉換12種編碼格式：Base64、CBOR、Hex、URL編碼、HTML實體、UTF-8、ASCII、Base32等。",
+    "keywords": "Base64解碼器, CBOR解碼器, Hex解碼器, URL編碼, HTML實體, UTF-8, ASCII, Base32, 編碼轉換器, 文字解碼器"
   },
   "tabs": {
     "decoder": "解碼器",

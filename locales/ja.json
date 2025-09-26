@@ -1,8 +1,8 @@
 {
-  "title": "自動エンコーディング検出とデコーダー",
+  "title": "Base64, CBOR, Hex, URLエンコーディング自動デコーダー - 無料オンライン変換ツール",
   "meta": {
-    "description": "様々なエンコーディング形式（UTF-8、EUC-KR、Base64、URLエンコーディングなど）を自動的に検出し変換する無料オンラインツールです。",
-    "keywords": "エンコーディング, デコーディング, UTF-8, EUC-KR, Base64, URLエンコーディング, テキスト変換, 文字エンコーディング"
+    "description": "Base64、CBOR、Hex、URLエンコーディング、HTMLエンティティ、UTF-8、ASCII、Base32など12種類のエンコーディングを自動検出・変換する無料オンラインツールです。",
+    "keywords": "Base64 デコーダー, CBOR デコーダー, Hex デコーダー, URLエンコーディング, HTMLエンティティ, UTF-8, ASCII, Base32, エンコーディング変換, テキストデコーダー"
   },
   "tabs": {
     "decoder": "デコーダー",

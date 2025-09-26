@@ -1,8 +1,8 @@
 {
-  "title": "Auto Encoding Detection & Decoder",
+  "title": "Base64, CBOR, Hex, URL Encoding Auto Decoder - Free Online Converter Tool",
   "meta": {
-    "description": "Free online tool that automatically detects and converts various encoding formats (UTF-8, EUC-KR, Base64, URL encoding, etc.).",
-    "keywords": "encoding, decoding, UTF-8, EUC-KR, Base64, URL encoding, text conversion, character encoding"
+    "description": "Free online tool that automatically detects and converts 12 encoding formats: Base64, CBOR, Hex, URL encoding, HTML entities, UTF-8, ASCII, Base32, and more.",
+    "keywords": "Base64 decoder, CBOR decoder, Hex decoder, URL encoding, HTML entities, UTF-8, ASCII, Base32, encoding converter, text decoder"
   },
   "tabs": {
     "decoder": "Decoder",

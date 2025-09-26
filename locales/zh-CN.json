@@ -1,8 +1,8 @@
 {
-  "title": "自动编码检测和解码器",
+  "title": "Base64, CBOR, Hex, URL编码自动解码器 - 免费在线转换工具",
   "meta": {
-    "description": "免费在线工具，自动检测并转换各种编码格式（UTF-8、EUC-KR、Base64、URL编码等）。",
-    "keywords": "编码, 解码, UTF-8, EUC-KR, Base64, URL编码, 文本转换, 字符编码"
+    "description": "免费在线工具，自动检测并转换12种编码格式：Base64、CBOR、Hex、URL编码、HTML实体、UTF-8、ASCII、Base32等。",
+    "keywords": "Base64解码器, CBOR解码器, Hex解码器, URL编码, HTML实体, UTF-8, ASCII, Base32, 编码转换器, 文本解码器"
   },
   "tabs": {
     "decoder": "解码器",
