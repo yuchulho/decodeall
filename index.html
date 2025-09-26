@@ -588,7 +588,11 @@
                 },
                 '& .MuiInputBase-input': {
                     fontSize: { xs: '0.95rem', md: '0.875rem' },
-                    lineHeight: { xs: 1.4, md: 1.43 }
+                    lineHeight: { xs: 1.4, md: 1.43 },
+                    padding: '6px 8px !important'
+                },
+                '& .MuiInputBase-inputMultiline': {
+                    padding: '6px 8px !important'
                 }
             },
             
@@ -1884,7 +1888,10 @@
                                 '& .MuiOutlinedInput-input': {
                                     color: isDark ? '#f7fafc' : '#2d3748',
                                     fontSize: '0.875rem',
-                                    padding: '12px 14px',
+                                    padding: '4px 8px',
+                                },
+                                '& .MuiInputBase-inputMultiline': {
+                                    padding: '4px 8px',
                                 },
                             },
                         },
@@ -3141,20 +3148,11 @@
                                             onDragLeave: (e) => { e.preventDefault(); e.stopPropagation(); setIsDragOverInput(false); }
                                         },
                                         sx: {
-                                            '& .MuiInputLabel-root': {
-                                                fontSize: { xs: '1rem', md: '0.875rem' }
-                                            },
-                                            '& .MuiInputBase-input': {
-                                                fontSize: { xs: '0.95rem', md: '0.875rem' },
-                                                lineHeight: { xs: 1.4, md: 1.43 }
-                                            },
+                                            ...commonStyles.inputField,
+                                            ...commonStyles.dragBackground(isDragOverInput),
                                             '& .MuiInputBase-root': {
                                                 fontSize: { xs: '0.95rem', md: '0.875rem' }
                                             }
-                                        },
-                                        sx: {
-                                            ...commonStyles.inputField,
-                                            ...commonStyles.dragBackground(isDragOverInput)
                                         }
                                     }),
                                     isDragOverInput && React.createElement('div', {
@@ -3346,13 +3344,7 @@
                                                 style: { marginBottom: '20px', background: "#fafdff" },
                                                 InputProps: { readOnly: true },
                                                 sx: {
-                                                    '& .MuiInputLabel-root': {
-                                                        fontSize: { xs: '1rem', md: '0.875rem' }
-                                                    },
-                                                    '& .MuiInputBase-input': {
-                                                        fontSize: { xs: '0.95rem', md: '0.875rem' },
-                                                        lineHeight: { xs: 1.4, md: 1.43 }
-                                                    }
+                                                    ...commonStyles.inputField
                                                 }
                                             })
                                     ),
@@ -3717,7 +3709,10 @@
                                     value: encodeResult,
                                     InputLabelProps: { shrink: true },
                                     style: { marginBottom: '20px', background: "#fafdff" },
-                                    InputProps: { readOnly: true }
+                                    InputProps: { readOnly: true },
+                                    sx: {
+                                        ...commonStyles.inputField
+                                    }
                                 }),
                                 
                                 // CBOR 인코딩 시 hex 결과 표시
@@ -3776,7 +3771,10 @@
                                         value: encodeHexResult,
                                         InputLabelProps: { shrink: true },
                                         style: { marginBottom: '20px', background: "#fff8e1" },
-                                        InputProps: { readOnly: true }
+                                        InputProps: { readOnly: true },
+                                        sx: {
+                                            ...commonStyles.inputField
+                                        }
                                     })
                                 ) : null,
                                 
