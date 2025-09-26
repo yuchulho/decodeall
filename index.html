@@ -22,80 +22,109 @@
     <meta property="twitter:url" content="https://decodeall.vercel.app/">
     <meta property="twitter:title" content="자동 인코딩 감지 & 디코더">
     <meta property="twitter:description" content="다양한 인코딩 형식을 자동으로 감지하고 변환하는 무료 온라인 도구">
-    <!-- Material UI CDN -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <!-- Chakra UI inspired fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Material Icons still needed for some components -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <style>
         :root {
-            /* 라이트 테마 기본 변수 */
-            --primary-color: #1976d2;
-            --primary-bg: #e3f2fd;
-            --light-bg: #fafdff;
-            --light-gray: #f5f7fa;
-            --border-color: #e0e0e0;
-            --text-secondary: #888;
-            --shadow-light: 0 2px 12px 0 rgba(25,118,210,0.08);
+            /* Chakra UI 인스파이어드 라이트 테마 */
+            --primary-color: #3182ce;
+            --primary-bg: #ebf8ff;
+            --light-bg: #f7fafc;
+            --light-gray: #edf2f7;
+            --border-color: #e2e8f0;
+            --text-secondary: #718096;
+            --shadow-light: 0 4px 20px 0 rgba(0,0,0,0.08);
             
             /* 테마별 색상 변수 */
-            --background-color: #f4f4f4;
+            --background-color: #f7fafc;
             --surface-color: #ffffff;
-            --text-primary: #000000;
-            --text-secondary: #666666;
-            --border-light: #e0e0e0;
-            --shadow: 0 2px 8px rgba(0,0,0,0.1);
-            --drag-bg: rgba(25, 118, 210, 0.10);
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-light: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --drag-bg: rgba(49, 130, 206, 0.10);
             --drag-message-bg: rgba(255,255,255,0.95);
+            
+            /* Chakra UI 색상 팔레트 */
+            --gray-50: #f7fafc;
+            --gray-100: #edf2f7;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e0;
+            --gray-400: #a0aec0;
+            --gray-500: #718096;
+            --gray-600: #4a5568;
+            --gray-700: #2d3748;
+            --gray-800: #1a202c;
+            --gray-900: #171923;
+            
+            --blue-50: #ebf8ff;
+            --blue-100: #bee3f8;
+            --blue-200: #90cdf4;
+            --blue-300: #63b3ed;
+            --blue-400: #4299e1;
+            --blue-500: #3182ce;
+            --blue-600: #2b77cb;
+            --blue-700: #2c5aa0;
+            --blue-800: #2a4365;
+            --blue-900: #1a365d;
         }
         
         /* 다크 테마 */
         [data-theme="dark"] {
-            --primary-color: #64b5f6;
-            --primary-bg: #1e3a8a;
-            --light-bg: #1f2937;
-            --light-gray: #374151;
-            --border-color: #4b5563;
-            --text-secondary: #9ca3af;
-            --shadow-light: 0 2px 12px 0 rgba(100,181,246,0.15);
+            --primary-color: #4299e1;
+            --primary-bg: #1a365d;
+            --light-bg: #1a202c;
+            --light-gray: #2d3748;
+            --border-color: #4a5568;
+            --text-secondary: #a0aec0;
+            --shadow-light: 0 4px 20px 0 rgba(0,0,0,0.2);
             
-            --background-color: #111827;
-            --surface-color: #1f2937;
-            --text-primary: #f9fafb;
-            --text-secondary: #d1d5db;
-            --border-light: #374151;
-            --shadow: 0 2px 8px rgba(0,0,0,0.3);
-            --drag-bg: rgba(100, 181, 246, 0.15);
-            --drag-message-bg: rgba(31, 41, 55, 0.95);
+            --background-color: #171923;
+            --surface-color: #1a202c;
+            --text-primary: #f7fafc;
+            --text-secondary: #a0aec0;
+            --border-light: #4a5568;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --drag-bg: rgba(66, 153, 225, 0.15);
+            --drag-message-bg: rgba(26, 32, 44, 0.95);
         }
         
         /* 시스템 테마 감지 */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme]) {
-                --primary-color: #64b5f6;
-                --primary-bg: #1e3a8a;
-                --light-bg: #1f2937;
-                --light-gray: #374151;
-                --border-color: #4b5563;
-                --text-secondary: #9ca3af;
-                --shadow-light: 0 2px 12px 0 rgba(100,181,246,0.15);
+                --primary-color: #4299e1;
+                --primary-bg: #1a365d;
+                --light-bg: #1a202c;
+                --light-gray: #2d3748;
+                --border-color: #4a5568;
+                --text-secondary: #a0aec0;
+                --shadow-light: 0 4px 20px 0 rgba(0,0,0,0.2);
                 
-                --background-color: #111827;
-                --surface-color: #1f2937;
-                --text-primary: #f9fafb;
-                --text-secondary: #d1d5db;
-                --border-light: #374151;
-                --shadow: 0 2px 8px rgba(0,0,0,0.3);
-                --drag-bg: rgba(100, 181, 246, 0.15);
-                --drag-message-bg: rgba(31, 41, 55, 0.95);
+                --background-color: #171923;
+                --surface-color: #1a202c;
+                --text-primary: #f7fafc;
+                --text-secondary: #a0aec0;
+                --border-light: #4a5568;
+                --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+                --drag-bg: rgba(66, 153, 225, 0.15);
+                --drag-message-bg: rgba(26, 32, 44, 0.95);
             }
         }
         
         body {
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             background-color: var(--background-color);
             color: var(--text-primary);
             margin: 0;
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            font-weight: 400;
+            line-height: 1.6;
         }
         
         #root {
@@ -1746,31 +1775,81 @@
         const { useState, useEffect, useRef } = React;
         const { createTheme, ThemeProvider } = MaterialUI;
 
-        // Material-UI 테마 생성 함수
+        // Chakra UI 인스파이어드 테마 생성 함수
         function createMUITheme(isDark) {
             return createTheme({
                 palette: {
                     mode: isDark ? 'dark' : 'light',
                     primary: {
-                        main: isDark ? '#64b5f6' : '#1976d2',
+                        main: isDark ? '#4299e1' : '#3182ce',
+                        light: isDark ? '#63b3ed' : '#4299e1',
+                        dark: isDark ? '#2b77cb' : '#2c5aa0',
                     },
                     background: {
-                        default: isDark ? '#111827' : '#f4f4f4',
-                        paper: isDark ? '#1f2937' : '#ffffff',
+                        default: isDark ? '#171923' : '#f7fafc',
+                        paper: isDark ? '#1a202c' : '#ffffff',
                     },
                     text: {
-                        primary: isDark ? '#f9fafb' : '#000000',
-                        secondary: isDark ? '#d1d5db' : '#666666',
+                        primary: isDark ? '#f7fafc' : '#2d3748',
+                        secondary: isDark ? '#a0aec0' : '#718096',
                     },
-                    divider: isDark ? '#374151' : '#e0e0e0',
+                    divider: isDark ? '#4a5568' : '#e2e8f0',
+                    grey: {
+                        50: '#f7fafc',
+                        100: '#edf2f7',
+                        200: '#e2e8f0',
+                        300: '#cbd5e0',
+                        400: '#a0aec0',
+                        500: '#718096',
+                        600: '#4a5568',
+                        700: '#2d3748',
+                        800: '#1a202c',
+                        900: '#171923',
+                    },
+                },
+                typography: {
+                    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+                    h1: {
+                        fontWeight: 700,
+                        fontSize: '2.25rem',
+                        lineHeight: 1.2,
+                        letterSpacing: '-0.025em',
+                    },
+                    h2: {
+                        fontWeight: 600,
+                        fontSize: '1.875rem',
+                        lineHeight: 1.3,
+                        letterSpacing: '-0.025em',
+                    },
+                    h3: {
+                        fontWeight: 600,
+                        fontSize: '1.5rem',
+                        lineHeight: 1.375,
+                    },
+                    h4: {
+                        fontWeight: 600,
+                        fontSize: '1.25rem',
+                        lineHeight: 1.375,
+                    },
+                    body1: {
+                        fontSize: '1rem',
+                        lineHeight: 1.6,
+                    },
+                    body2: {
+                        fontSize: '0.875rem',
+                        lineHeight: 1.6,
+                    },
                 },
                 components: {
                     MuiPaper: {
                         styleOverrides: {
                             root: {
                                 backgroundImage: 'none',
-                                backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                                color: isDark ? '#f9fafb' : '#000000',
+                                backgroundColor: isDark ? '#1a202c' : '#ffffff',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+                                borderRadius: '8px',
+                                border: `1px solid ${isDark ? '#4a5568' : '#e2e8f0'}`,
                             },
                         },
                     },
@@ -1778,26 +1857,34 @@
                         styleOverrides: {
                             root: {
                                 '& .MuiOutlinedInput-root': {
-                                    backgroundColor: isDark ? '#374151' : '#ffffff',
-                                    color: isDark ? '#f9fafb' : '#000000',
+                                    backgroundColor: isDark ? '#2d3748' : '#ffffff',
+                                    color: isDark ? '#f7fafc' : '#2d3748',
+                                    borderRadius: '6px',
+                                    transition: 'all 0.2s ease',
                                     '& fieldset': {
-                                        borderColor: isDark ? '#4b5563' : '#e0e0e0',
+                                        borderColor: isDark ? '#4a5568' : '#e2e8f0',
+                                        borderWidth: '1px',
                                     },
                                     '&:hover fieldset': {
-                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                        borderColor: isDark ? '#4299e1' : '#3182ce',
                                     },
                                     '&.Mui-focused fieldset': {
-                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                        borderColor: isDark ? '#4299e1' : '#3182ce',
+                                        borderWidth: '2px',
+                                        boxShadow: `0 0 0 1px ${isDark ? '#4299e1' : '#3182ce'}`,
                                     },
                                 },
                                 '& .MuiInputLabel-root': {
-                                    color: isDark ? '#d1d5db' : '#666666',
+                                    color: isDark ? '#a0aec0' : '#718096',
+                                    fontSize: '0.875rem',
                                     '&.Mui-focused': {
-                                        color: isDark ? '#64b5f6' : '#1976d2',
+                                        color: isDark ? '#4299e1' : '#3182ce',
                                     },
                                 },
                                 '& .MuiOutlinedInput-input': {
-                                    color: isDark ? '#f9fafb' : '#000000',
+                                    color: isDark ? '#f7fafc' : '#2d3748',
+                                    fontSize: '0.875rem',
+                                    padding: '12px 14px',
                                 },
                             },
                         },
@@ -1805,36 +1892,53 @@
                     MuiTab: {
                         styleOverrides: {
                             root: {
-                                color: isDark ? '#d1d5db' : '#666666',
+                                color: isDark ? '#a0aec0' : '#718096',
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                fontSize: '0.875rem',
                                 '&.Mui-selected': {
-                                    color: isDark ? '#64b5f6' : '#1976d2',
+                                    color: isDark ? '#4299e1' : '#3182ce',
+                                    fontWeight: 600,
                                 },
                             },
                         },
                     },
                     MuiTabs: {
                         styleOverrides: {
-                            indicator: {
-                                backgroundColor: isDark ? '#64b5f6' : '#1976d2',
+                            root: {
+                                '& .MuiTabs-indicator': {
+                                    backgroundColor: isDark ? '#4299e1' : '#3182ce',
+                                    height: '2px',
+                                    borderRadius: '1px',
+                                },
                             },
                         },
                     },
                     MuiButton: {
                         styleOverrides: {
                             root: {
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                borderRadius: '6px',
+                                fontSize: '0.875rem',
+                                transition: 'all 0.2s ease',
                                 '&.MuiButton-contained': {
-                                    backgroundColor: isDark ? '#64b5f6' : '#1976d2',
-                                    color: isDark ? '#111827' : '#ffffff',
+                                    backgroundColor: isDark ? '#4299e1' : '#3182ce',
+                                    color: '#ffffff',
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
                                     '&:hover': {
-                                        backgroundColor: isDark ? '#3b82f6' : '#1565c0',
+                                        backgroundColor: isDark ? '#63b3ed' : '#2c5aa0',
+                                        boxShadow: '0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)',
+                                        transform: 'translateY(-1px)',
                                     },
                                 },
                                 '&.MuiButton-outlined': {
-                                    borderColor: isDark ? '#4b5563' : '#e0e0e0',
-                                    color: isDark ? '#f9fafb' : '#000000',
+                                    borderColor: isDark ? '#4a5568' : '#e2e8f0',
+                                    color: isDark ? '#f7fafc' : '#2d3748',
+                                    backgroundColor: 'transparent',
                                     '&:hover': {
-                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
-                                        backgroundColor: isDark ? 'rgba(100, 181, 246, 0.08)' : 'rgba(25, 118, 210, 0.08)',
+                                        borderColor: isDark ? '#4299e1' : '#3182ce',
+                                        backgroundColor: isDark ? 'rgba(66, 153, 225, 0.08)' : 'rgba(49, 130, 206, 0.08)',
                                     },
                                 },
                             },
@@ -1843,12 +1947,16 @@
                     MuiChip: {
                         styleOverrides: {
                             root: {
-                                backgroundColor: isDark ? '#374151' : '#e3f2fd',
-                                color: isDark ? '#f9fafb' : '#1976d2',
+                                backgroundColor: isDark ? '#2d3748' : '#ebf8ff',
+                                color: isDark ? '#f7fafc' : '#3182ce',
+                                border: `1px solid ${isDark ? '#4a5568' : '#bee3f8'}`,
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
                                 '& .MuiChip-deleteIcon': {
-                                    color: isDark ? '#d1d5db' : '#666666',
+                                    color: isDark ? '#a0aec0' : '#718096',
                                     '&:hover': {
-                                        color: isDark ? '#f9fafb' : '#000000',
+                                        color: isDark ? '#f7fafc' : '#2d3748',
                                     },
                                 },
                             },
@@ -1857,23 +1965,53 @@
                     MuiTypography: {
                         styleOverrides: {
                             root: {
-                                color: isDark ? '#f9fafb' : '#000000',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            h1: {
+                                fontWeight: 700,
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            h2: {
+                                fontWeight: 600,
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            h3: {
+                                fontWeight: 600,
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            h4: {
+                                fontWeight: 600,
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            body1: {
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                            },
+                            body2: {
+                                color: isDark ? '#a0aec0' : '#718096',
+                            },
+                            caption: {
+                                color: isDark ? '#a0aec0' : '#718096',
                             },
                         },
                     },
                     MuiFormControlLabel: {
                         styleOverrides: {
                             label: {
-                                color: isDark ? '#f9fafb' : '#000000',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                                fontSize: '0.875rem',
                             },
                         },
                     },
                     MuiCheckbox: {
                         styleOverrides: {
                             root: {
-                                color: isDark ? '#d1d5db' : '#666666',
+                                color: isDark ? '#a0aec0' : '#718096',
+                                borderRadius: '4px',
                                 '&.Mui-checked': {
-                                    color: isDark ? '#64b5f6' : '#1976d2',
+                                    color: isDark ? '#4299e1' : '#3182ce',
+                                },
+                                '&:hover': {
+                                    backgroundColor: isDark ? 'rgba(66, 153, 225, 0.08)' : 'rgba(49, 130, 206, 0.08)',
                                 },
                             },
                         },
@@ -1881,16 +2019,19 @@
                     MuiSelect: {
                         styleOverrides: {
                             root: {
-                                backgroundColor: isDark ? '#374151' : '#ffffff',
-                                color: isDark ? '#f9fafb' : '#000000',
+                                backgroundColor: isDark ? '#2d3748' : '#ffffff',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                                borderRadius: '6px',
                                 '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: isDark ? '#4b5563' : '#e0e0e0',
+                                    borderColor: isDark ? '#4a5568' : '#e2e8f0',
                                 },
                                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                    borderColor: isDark ? '#4299e1' : '#3182ce',
                                 },
                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                    borderColor: isDark ? '#4299e1' : '#3182ce',
+                                    borderWidth: '2px',
+                                    boxShadow: `0 0 0 1px ${isDark ? '#4299e1' : '#3182ce'}`,
                                 },
                             },
                         },
@@ -1898,24 +2039,49 @@
                     MuiMenu: {
                         styleOverrides: {
                             paper: {
-                                backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                                color: isDark ? '#f9fafb' : '#000000',
+                                backgroundColor: isDark ? '#1a202c' : '#ffffff',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                                boxShadow: '0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06)',
+                                border: `1px solid ${isDark ? '#4a5568' : '#e2e8f0'}`,
+                                borderRadius: '6px',
                             },
                         },
                     },
                     MuiMenuItem: {
                         styleOverrides: {
                             root: {
-                                color: isDark ? '#f9fafb' : '#000000',
+                                color: isDark ? '#f7fafc' : '#2d3748',
+                                fontSize: '0.875rem',
+                                padding: '8px 12px',
                                 '&:hover': {
-                                    backgroundColor: isDark ? '#374151' : '#f5f5f5',
+                                    backgroundColor: isDark ? '#2d3748' : '#f7fafc',
                                 },
                                 '&.Mui-selected': {
-                                    backgroundColor: isDark ? '#374151' : '#e3f2fd',
+                                    backgroundColor: isDark ? '#2d3748' : '#ebf8ff',
+                                    color: isDark ? '#4299e1' : '#3182ce',
                                     '&:hover': {
-                                        backgroundColor: isDark ? '#4b5563' : '#bbdefb',
+                                        backgroundColor: isDark ? '#4a5568' : '#bee3f8',
                                     },
                                 },
+                            },
+                        },
+                    },
+                    MuiIconButton: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: '6px',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    backgroundColor: isDark ? 'rgba(66, 153, 225, 0.08)' : 'rgba(49, 130, 206, 0.08)',
+                                },
+                            },
+                        },
+                    },
+                    MuiAlert: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: '8px',
+                                border: `1px solid ${isDark ? '#4a5568' : '#e2e8f0'}`,
                             },
                         },
                     },
