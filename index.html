@@ -3317,13 +3317,19 @@
                                                 value: output,
                                                 InputLabelProps: { shrink: true },
                                                 inputRef: outputRef,
-                                                style: { marginBottom: '20px', background: "#f0f0f0", fontFamily: 'Consolas, monospace' },
                                                 InputProps: { 
-                                                    readOnly: true,
-                                                    style: { fontFamily: 'Consolas, monospace' }
+                                                    readOnly: true
                                                 },
                                                 sx: {
-                                                    ...commonStyles.inputField
+                                                    ...commonStyles.inputField,
+                                                    mb: '20px',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        backgroundColor: "#f0f0f0",
+                                                        fontFamily: 'Consolas, monospace'
+                                                    },
+                                                    '& .MuiInputBase-input': {
+                                                        fontFamily: 'Consolas, monospace'
+                                                    }
                                                 }
                                             })
                                             : React.createElement(TextField, {
@@ -3335,10 +3341,13 @@
                                                 value: output,
                                                 InputLabelProps: { shrink: true },
                                                 inputRef: outputRef,
-                                                style: { marginBottom: '20px', background: "#fafdff" },
                                                 InputProps: { readOnly: true },
                                                 sx: {
-                                                    ...commonStyles.inputField
+                                                    ...commonStyles.inputField,
+                                                    mb: '20px',
+                                                    '& .MuiOutlinedInput-root': {
+                                                        backgroundColor: "#fafdff"
+                                                    }
                                                 }
                                             })
                                     ),
@@ -3470,32 +3479,24 @@
                                             )
                                         )
                                     ),
-                                    React.createElement(Box, {
+                                    React.createElement(TextField, {
+                                        label: "CBOR Diagnostic Notation",
+                                        value: cborDiagnostic,
+                                        variant: "outlined",
+                                        fullWidth: true,
+                                        multiline: true,
+                                        rows: 6,
+                                        InputProps: { readOnly: true },
                                         sx: {
-                                            position: 'relative',
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: 1,
-                                            backgroundColor: '#f8f9fa'
-                                        }
-                                    },
-                                        React.createElement(TextField, {
-                                            label: "CBOR Diagnostic Notation",
-                                            value: cborDiagnostic,
-                                            variant: "outlined",
-                                            fullWidth: true,
-                                            multiline: true,
-                                            rows: 6,
-                                            InputProps: { readOnly: true },
-                                            sx: {
-                                                ...commonStyles.inputField,
-                                                '& .MuiOutlinedInput-root': {
-                                                    fontFamily: 'monospace',
-                                                    fontSize: '14px',
-                                                    backgroundColor: '#ffffff'
-                                                }
+                                            ...commonStyles.inputField,
+                                            '& .MuiOutlinedInput-root': {
+                                                fontFamily: 'monospace',
+                                                fontSize: '14px',
+                                                backgroundColor: '#f8f9fa',
+                                                border: '1px solid #e0e0e0'
                                             }
-                                        })
-                                    )
+                                        }
+                                    })
                                 )
                             ),
 
@@ -3703,10 +3704,13 @@
                                     rows: 8,
                                     value: encodeResult,
                                     InputLabelProps: { shrink: true },
-                                    style: { marginBottom: '20px', background: "#fafdff" },
                                     InputProps: { readOnly: true },
                                     sx: {
-                                        ...commonStyles.inputField
+                                        ...commonStyles.inputField,
+                                        mb: '20px',
+                                        '& .MuiOutlinedInput-root': {
+                                            backgroundColor: "#fafdff"
+                                        }
                                     }
                                 }),
                                 
