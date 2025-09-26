@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <style>
         :root {
-            /* CSS 변수로 중복 색상 관리 */
+            /* 라이트 테마 기본 변수 */
             --primary-color: #1976d2;
             --primary-bg: #e3f2fd;
             --light-bg: #fafdff;
@@ -35,13 +35,67 @@
             --border-color: #e0e0e0;
             --text-secondary: #888;
             --shadow-light: 0 2px 12px 0 rgba(25,118,210,0.08);
+            
+            /* 테마별 색상 변수 */
+            --background-color: #f4f4f4;
+            --surface-color: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #666666;
+            --border-light: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --drag-bg: rgba(25, 118, 210, 0.10);
+            --drag-message-bg: rgba(255,255,255,0.95);
+        }
+        
+        /* 다크 테마 */
+        [data-theme="dark"] {
+            --primary-color: #64b5f6;
+            --primary-bg: #1e3a8a;
+            --light-bg: #1f2937;
+            --light-gray: #374151;
+            --border-color: #4b5563;
+            --text-secondary: #9ca3af;
+            --shadow-light: 0 2px 12px 0 rgba(100,181,246,0.15);
+            
+            --background-color: #111827;
+            --surface-color: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --border-light: #374151;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --drag-bg: rgba(100, 181, 246, 0.15);
+            --drag-message-bg: rgba(31, 41, 55, 0.95);
+        }
+        
+        /* 시스템 테마 감지 */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) {
+                --primary-color: #64b5f6;
+                --primary-bg: #1e3a8a;
+                --light-bg: #1f2937;
+                --light-gray: #374151;
+                --border-color: #4b5563;
+                --text-secondary: #9ca3af;
+                --shadow-light: 0 2px 12px 0 rgba(100,181,246,0.15);
+                
+                --background-color: #111827;
+                --surface-color: #1f2937;
+                --text-primary: #f9fafb;
+                --text-secondary: #d1d5db;
+                --border-light: #374151;
+                --shadow: 0 2px 8px rgba(0,0,0,0.3);
+                --drag-bg: rgba(100, 181, 246, 0.15);
+                --drag-message-bg: rgba(31, 41, 55, 0.95);
+            }
         }
         
         body {
             font-family: 'Roboto', Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: var(--background-color);
+            color: var(--text-primary);
             margin: 0;
             min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         #root {
@@ -52,15 +106,100 @@
             padding: 8px;
         }
         
-        /* JSON/XML 구문 강조 */
-        .json-key { color: #ffb300; }
+        /* 테마 토글 버튼 */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--surface-color);
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .theme-toggle-icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-primary);
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+        
+        .theme-toggle-icon:hover {
+            opacity: 1;
+            fill: var(--primary-color);
+            transform: scale(1.1);
+        }
+        
+        /* SVG 스트로크 스타일 */
+        .theme-toggle-icon path,
+        .theme-toggle-icon circle,
+        .theme-toggle-icon rect,
+        .theme-toggle-icon line {
+            stroke: var(--text-primary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+        
+        /* 다크모드 달 아이콘은 채워진 스타일 */
+        .theme-toggle-icon path[d*="21 12.79"] {
+            fill: var(--text-primary);
+            stroke: none;
+        }
+        
+        /* 라이트모드 태양 중심 원은 채워진 스타일 */
+        .theme-toggle-icon circle {
+            fill: var(--text-primary);
+            stroke: none;
+        }
+        
+        /* 호버 시 색상 변경 */
+        .theme-toggle-icon:hover path,
+        .theme-toggle-icon:hover circle,
+        .theme-toggle-icon:hover rect,
+        .theme-toggle-icon:hover line {
+            stroke: var(--primary-color);
+        }
+        
+        .theme-toggle-icon:hover path[d*="21 12.79"] {
+            fill: var(--primary-color);
+        }
+        
+        .theme-toggle-icon:hover circle {
+            fill: var(--primary-color);
+        }
+        
+        /* JSON/XML 구문 강조 - 테마별 */
+        .json-key { color: var(--primary-color); }
         .json-string { color: #43a047; }
         .json-number { color: #29b6f6; }
         .json-boolean { color: #f06292; }
-        .json-null { color: #bdbdbd; }
-        .xml-tag { color: #64b5f6; }
+        .json-null { color: var(--text-secondary); }
+        .xml-tag { color: var(--primary-color); }
         .xml-attr { color: #ffd54f; }
         .xml-attr-value { color: #81c784; }
+        
+        /* 다크 테마에서 구문 강조 색상 조정 */
+        [data-theme="dark"] .json-string { color: #68d391; }
+        [data-theme="dark"] .json-number { color: #63b3ed; }
+        [data-theme="dark"] .json-boolean { color: #f687b3; }
+        [data-theme="dark"] .xml-attr { color: #f6e05e; }
+        [data-theme="dark"] .xml-attr-value { color: #68d391; }
         
         /* 드래그 앤 드롭 공통 스타일 */
         .drag-overlay {
@@ -75,7 +214,7 @@
             justify-content: center;
             border-radius: 8px;
             border: 2.5px dashed var(--primary-color);
-            background: rgba(25, 118, 210, 0.10);
+            background: var(--drag-bg);
             z-index: 10;
             transition: border 0.2s, background 0.2s;
             box-sizing: border-box;
@@ -85,13 +224,14 @@
             color: var(--primary-color);
             font-weight: 600;
             font-size: 20px;
-            background: rgba(255,255,255,0.85);
+            background: var(--drag-message-bg);
             border-radius: 6px;
             padding: 18px 36px;
             box-shadow: var(--shadow-light);
             display: flex;
             align-items: center;
             gap: 10px;
+            backdrop-filter: blur(10px);
         }
         
         /* 모바일 반응형 스타일 */
@@ -106,6 +246,234 @@
             .mobile-title {
                 font-size: 1.5rem !important;
                 margin-bottom: 16px !important;
+            }
+        }
+        
+        /* Material-UI 다크테마 강제 적용 */
+        [data-theme="dark"] .MuiPaper-root {
+            background-color: var(--surface-color) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Outlined chip 스타일 개선 */
+        [data-theme="dark"] .MuiBox-root {
+            border-color: var(--border-light) !important;
+        }
+        
+        [data-theme="dark"] .MuiBox-root:hover {
+            border-color: var(--primary-color) !important;
+            color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root {
+            background-color: #374151 !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiInputLabel-root {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiInputLabel-root.Mui-focused {
+            color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-input {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+            border-color: var(--border-light) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+            border-color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+            border-color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiTab-root {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .MuiTab-root.Mui-selected {
+            color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiTabs-indicator {
+            background-color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiButton-root {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiButton-contained {
+            background-color: var(--primary-color) !important;
+            color: #111827 !important;
+        }
+        
+        [data-theme="dark"] .MuiButton-outlined {
+            border-color: var(--border-light) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiChip-root {
+            background-color: #374151 !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiTypography-root {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiFormControlLabel-label {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiCheckbox-root {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="dark"] .MuiCheckbox-root.Mui-checked {
+            color: var(--primary-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiSelect-root {
+            background-color: #374151 !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiMenu-paper {
+            background-color: var(--surface-color) !important;
+        }
+        
+        [data-theme="dark"] .MuiMenuItem-root {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="dark"] .MuiMenuItem-root:hover {
+            background-color: #374151 !important;
+        }
+        
+        [data-theme="dark"] .MuiMenuItem-root.Mui-selected {
+            background-color: #374151 !important;
+        }
+        
+        /* 시스템 다크테마 미디어 쿼리 */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme]) .MuiPaper-root {
+                background-color: var(--surface-color) !important;
+                color: var(--text-primary) !important;
+            }
+            
+            /* Outlined chip 스타일 개선 */
+            :root:not([data-theme]) .MuiBox-root {
+                border-color: var(--border-light) !important;
+            }
+            
+            :root:not([data-theme]) .MuiBox-root:hover {
+                border-color: var(--primary-color) !important;
+                color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiOutlinedInput-root {
+                background-color: #374151 !important;
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiInputLabel-root {
+                color: var(--text-secondary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiInputLabel-root.Mui-focused {
+                color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiOutlinedInput-input {
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+                border-color: var(--border-light) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+                border-color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+                border-color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTab-root {
+                color: var(--text-secondary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTab-root.Mui-selected {
+                color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTabs-indicator {
+                background-color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiButton-root {
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiButton-contained {
+                background-color: var(--primary-color) !important;
+                color: #111827 !important;
+            }
+            
+            :root:not([data-theme]) .MuiButton-outlined {
+                border-color: var(--border-light) !important;
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiChip-root {
+                background-color: #374151 !important;
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiTypography-root {
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiFormControlLabel-label {
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiCheckbox-root {
+                color: var(--text-secondary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiCheckbox-root.Mui-checked {
+                color: var(--primary-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiSelect-root {
+                background-color: #374151 !important;
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiMenu-paper {
+                background-color: var(--surface-color) !important;
+            }
+            
+            :root:not([data-theme]) .MuiMenuItem-root {
+                color: var(--text-primary) !important;
+            }
+            
+            :root:not([data-theme]) .MuiMenuItem-root:hover {
+                background-color: #374151 !important;
+            }
+            
+            :root:not([data-theme]) .MuiMenuItem-root.Mui-selected {
+                background-color: #374151 !important;
             }
         }
     </style>
@@ -1376,17 +1744,268 @@
 
         // React hooks 선언
         const { useState, useEffect, useRef } = React;
+        const { createTheme, ThemeProvider } = MaterialUI;
+
+        // Material-UI 테마 생성 함수
+        function createMUITheme(isDark) {
+            return createTheme({
+                palette: {
+                    mode: isDark ? 'dark' : 'light',
+                    primary: {
+                        main: isDark ? '#64b5f6' : '#1976d2',
+                    },
+                    background: {
+                        default: isDark ? '#111827' : '#f4f4f4',
+                        paper: isDark ? '#1f2937' : '#ffffff',
+                    },
+                    text: {
+                        primary: isDark ? '#f9fafb' : '#000000',
+                        secondary: isDark ? '#d1d5db' : '#666666',
+                    },
+                    divider: isDark ? '#374151' : '#e0e0e0',
+                },
+                components: {
+                    MuiPaper: {
+                        styleOverrides: {
+                            root: {
+                                backgroundImage: 'none',
+                                backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                                color: isDark ? '#f9fafb' : '#000000',
+                            },
+                        },
+                    },
+                    MuiTextField: {
+                        styleOverrides: {
+                            root: {
+                                '& .MuiOutlinedInput-root': {
+                                    backgroundColor: isDark ? '#374151' : '#ffffff',
+                                    color: isDark ? '#f9fafb' : '#000000',
+                                    '& fieldset': {
+                                        borderColor: isDark ? '#4b5563' : '#e0e0e0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                    },
+                                },
+                                '& .MuiInputLabel-root': {
+                                    color: isDark ? '#d1d5db' : '#666666',
+                                    '&.Mui-focused': {
+                                        color: isDark ? '#64b5f6' : '#1976d2',
+                                    },
+                                },
+                                '& .MuiOutlinedInput-input': {
+                                    color: isDark ? '#f9fafb' : '#000000',
+                                },
+                            },
+                        },
+                    },
+                    MuiTab: {
+                        styleOverrides: {
+                            root: {
+                                color: isDark ? '#d1d5db' : '#666666',
+                                '&.Mui-selected': {
+                                    color: isDark ? '#64b5f6' : '#1976d2',
+                                },
+                            },
+                        },
+                    },
+                    MuiTabs: {
+                        styleOverrides: {
+                            indicator: {
+                                backgroundColor: isDark ? '#64b5f6' : '#1976d2',
+                            },
+                        },
+                    },
+                    MuiButton: {
+                        styleOverrides: {
+                            root: {
+                                '&.MuiButton-contained': {
+                                    backgroundColor: isDark ? '#64b5f6' : '#1976d2',
+                                    color: isDark ? '#111827' : '#ffffff',
+                                    '&:hover': {
+                                        backgroundColor: isDark ? '#3b82f6' : '#1565c0',
+                                    },
+                                },
+                                '&.MuiButton-outlined': {
+                                    borderColor: isDark ? '#4b5563' : '#e0e0e0',
+                                    color: isDark ? '#f9fafb' : '#000000',
+                                    '&:hover': {
+                                        borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                        backgroundColor: isDark ? 'rgba(100, 181, 246, 0.08)' : 'rgba(25, 118, 210, 0.08)',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    MuiChip: {
+                        styleOverrides: {
+                            root: {
+                                backgroundColor: isDark ? '#374151' : '#e3f2fd',
+                                color: isDark ? '#f9fafb' : '#1976d2',
+                                '& .MuiChip-deleteIcon': {
+                                    color: isDark ? '#d1d5db' : '#666666',
+                                    '&:hover': {
+                                        color: isDark ? '#f9fafb' : '#000000',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    MuiTypography: {
+                        styleOverrides: {
+                            root: {
+                                color: isDark ? '#f9fafb' : '#000000',
+                            },
+                        },
+                    },
+                    MuiFormControlLabel: {
+                        styleOverrides: {
+                            label: {
+                                color: isDark ? '#f9fafb' : '#000000',
+                            },
+                        },
+                    },
+                    MuiCheckbox: {
+                        styleOverrides: {
+                            root: {
+                                color: isDark ? '#d1d5db' : '#666666',
+                                '&.Mui-checked': {
+                                    color: isDark ? '#64b5f6' : '#1976d2',
+                                },
+                            },
+                        },
+                    },
+                    MuiSelect: {
+                        styleOverrides: {
+                            root: {
+                                backgroundColor: isDark ? '#374151' : '#ffffff',
+                                color: isDark ? '#f9fafb' : '#000000',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: isDark ? '#4b5563' : '#e0e0e0',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: isDark ? '#64b5f6' : '#1976d2',
+                                },
+                            },
+                        },
+                    },
+                    MuiMenu: {
+                        styleOverrides: {
+                            paper: {
+                                backgroundColor: isDark ? '#1f2937' : '#ffffff',
+                                color: isDark ? '#f9fafb' : '#000000',
+                            },
+                        },
+                    },
+                    MuiMenuItem: {
+                        styleOverrides: {
+                            root: {
+                                color: isDark ? '#f9fafb' : '#000000',
+                                '&:hover': {
+                                    backgroundColor: isDark ? '#374151' : '#f5f5f5',
+                                },
+                                '&.Mui-selected': {
+                                    backgroundColor: isDark ? '#374151' : '#e3f2fd',
+                                    '&:hover': {
+                                        backgroundColor: isDark ? '#4b5563' : '#bbdefb',
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        }
 
         function EncoderDecoderTabs() {
             // 언어 상태
             const [language, setLanguage] = useState(detectBrowserLanguage());
             const [isLanguageLoaded, setIsLanguageLoaded] = useState(false);
             
+            // 테마 상태
+            const [theme, setTheme] = useState(() => {
+                const savedTheme = localStorage.getItem('decodeall-theme');
+                if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+                    return savedTheme;
+                }
+                return 'system'; // 기본값: 시스템 설정 따르기
+            });
+            
             // i18next 훅 사용
             const { t, i18n } = ReactI18next.useTranslation();
             
             // 번역 함수들
             const getDragMessage = () => t('common.dragMessage');
+            
+            // 테마 적용 함수
+            const applyTheme = (themeValue) => {
+                const root = document.documentElement;
+                if (themeValue === 'system') {
+                    // 시스템 테마 따르기
+                    root.removeAttribute('data-theme');
+                } else {
+                    // 사용자 지정 테마
+                    root.setAttribute('data-theme', themeValue);
+                }
+            };
+            
+            // 테마 토글 함수
+            const toggleTheme = () => {
+                const themeOrder = ['system', 'light', 'dark'];
+                const currentIndex = themeOrder.indexOf(theme);
+                const nextTheme = themeOrder[(currentIndex + 1) % themeOrder.length];
+                setTheme(nextTheme);
+            };
+            
+            // 현재 적용된 테마 가져오기 (시스템 테마 고려)
+            const getCurrentTheme = () => {
+                if (theme === 'system') {
+                    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                }
+                return theme;
+            };
+            
+            // Material-UI 테마 생성
+            const muiTheme = createMUITheme(getCurrentTheme() === 'dark');
+            
+            // 테마 아이콘 가져오기 (미니멀한 SVG 아이콘)
+            const getThemeIcon = () => {
+                switch (theme) {
+                    case 'light': 
+                        return React.createElement('svg', {
+                            className: 'theme-toggle-icon',
+                            viewBox: '0 0 24 24',
+                            xmlns: 'http://www.w3.org/2000/svg'
+                        }, 
+                            React.createElement('circle', { cx: '12', cy: '12', r: '4' }),
+                            React.createElement('path', { d: 'M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41' })
+                        );
+                    case 'dark': 
+                        return React.createElement('svg', {
+                            className: 'theme-toggle-icon',
+                            viewBox: '0 0 24 24',
+                            xmlns: 'http://www.w3.org/2000/svg'
+                        }, 
+                            React.createElement('path', { d: 'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' })
+                        );
+                    default: // system
+                        return React.createElement('svg', {
+                            className: 'theme-toggle-icon',
+                            viewBox: '0 0 24 24',
+                            xmlns: 'http://www.w3.org/2000/svg'
+                        }, 
+                            React.createElement('rect', { x: '2', y: '3', width: '20', height: '14', rx: '2', ry: '2' }),
+                            React.createElement('line', { x1: '8', y1: '21', x2: '16', y2: '21' }),
+                            React.createElement('line', { x1: '12', y1: '17', x2: '12', y2: '21' })
+                        );
+                }
+            };
             
             // 언어 리소스 로드
             useEffect(() => {
@@ -1477,6 +2096,26 @@
                     localStorage.setItem('decodeall-language', language);
                 }
             }, [language, isLanguageLoaded]);
+            
+            // 테마 적용 처리
+            useEffect(() => {
+                applyTheme(theme);
+                localStorage.setItem('decodeall-theme', theme);
+            }, [theme]);
+            
+            // 시스템 테마 변경 감지
+            useEffect(() => {
+                if (theme === 'system') {
+                    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                    const handleChange = () => {
+                        // 시스템 테마 변경 시 리렌더링을 위해 강제로 상태 업데이트
+                        setTheme('system');
+                    };
+                    
+                    mediaQuery.addEventListener('change', handleChange);
+                    return () => mediaQuery.removeEventListener('change', handleChange);
+                }
+            }, [theme]);
             
             const [tab, setTab] = useState(0);
 
@@ -2172,7 +2811,20 @@
             }
 
             return (
-                React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
+                React.createElement(ThemeProvider, { theme: muiTheme },
+                    React.createElement('div', { style: { position: 'relative', minHeight: '100vh' } },
+                        // 테마 토글 버튼
+                        React.createElement('div', {
+                            className: 'theme-toggle',
+                            onClick: toggleTheme,
+                            title: `현재: ${theme === 'system' ? '시스템' : theme === 'light' ? '라이트' : '다크'} 테마`
+                        },
+                            React.createElement('span', {
+                                className: 'theme-toggle-icon'
+                            }, getThemeIcon())
+                        ),
+                        
+                        React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
                     React.createElement(Grid, { item: true, xs: 12, sm: 11, md: 8, lg: 6 },
                         React.createElement(Paper, { 
                             elevation: 3, 
@@ -2237,8 +2889,10 @@
                                         px: { xs: 1, md: 1.25 }, 
                                         py: { xs: 0.375, md: 0.5 }, 
                                         borderRadius: 9999,
-                                        bgcolor: '#e3f2fd', 
-                                        color: '#1976d2',
+                                        bgcolor: 'transparent',
+                                        border: '2px solid',
+                                        borderColor: 'primary.main',
+                                        color: 'primary.main',
                                         fontSize: { xs: 10, md: 12 }, 
                                         fontWeight: 600
                                     }
@@ -2263,11 +2917,16 @@
                                             px: { xs: 0.75, md: 1.25 }, 
                                             py: { xs: 0.25, md: 0.5 }, 
                                             borderRadius: 9999,
-                                            bgcolor: '#f5f7fa', 
-                                            color: 'text.secondary',
-                                            border: '1px solid #e0e0e0',
+                                            bgcolor: 'transparent',
+                                            color: 'text.primary',
+                                            border: '1px solid',
+                                            borderColor: 'divider',
                                             fontSize: { xs: 9, md: 12 },
                                             cursor: 'default',
+                                            '&:hover': {
+                                                borderColor: 'primary.main',
+                                                color: 'primary.main',
+                                            },
                                             pointerEvents: 'none'
                                         }
                                     }, label)
@@ -3160,6 +3819,8 @@
                             )
                         )
                     )
+                )
+                )
                 )
             );
         }
