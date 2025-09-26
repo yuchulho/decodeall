@@ -2813,17 +2813,6 @@
             return (
                 React.createElement(ThemeProvider, { theme: muiTheme },
                     React.createElement('div', { style: { position: 'relative', minHeight: '100vh' } },
-                        // 테마 토글 버튼
-                        React.createElement('div', {
-                            className: 'theme-toggle',
-                            onClick: toggleTheme,
-                            title: `현재: ${theme === 'system' ? '시스템' : theme === 'light' ? '라이트' : '다크'} 테마`
-                        },
-                            React.createElement('span', {
-                                className: 'theme-toggle-icon'
-                            }, getThemeIcon())
-                        ),
-                        
                         React.createElement(Grid, { container: true, spacing: 2, justifyContent: "center", alignItems: "center" },
                     React.createElement(Grid, { item: true, xs: 12, sm: 11, md: 8, lg: 6 },
                         React.createElement(Paper, { 
@@ -3627,46 +3616,56 @@
                                 
                             ),
                             
-                            // 페이지 하단 언어 선택
+                            // 페이지 하단 언어 선택 및 테마 변경
                             React.createElement(Box, { 
                                 sx: { 
                                     display: 'flex', 
-                                    justifyContent: 'center', 
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: 3,
                                     mt: 4,
                                     mb: 2,
                                     pt: 3,
-                                    borderTop: '1px solid #e0e0e0'
+                                    borderTop: '1px solid',
+                                    borderColor: 'divider'
                                 } 
                             },
-                                React.createElement(MaterialUI.FormControl, { 
-                                    sx: { 
-                                        minWidth: { xs: 140, md: 120 },
-                                        '& .MuiInputLabel-root': {
-                                            fontSize: { xs: '0.9rem', md: '0.875rem' }
-                                        },
-                                        '& .MuiSelect-select': {
-                                            padding: { xs: '8px 32px 8px 12px', md: '6px 24px 6px 8px' }
-                                        }
-                                    } 
+                                // 언어 선택
+                                React.createElement(Box, {
+                                    sx: {
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }
                                 },
-                                    React.createElement(MaterialUI.InputLabel, { 
-                                        id: "language-select-label",
-                                        sx: { fontSize: { xs: '0.9rem', md: '0.875rem' } }
-                                    }, t('common.language')),
-                                    React.createElement(MaterialUI.Select, {
-                                        labelId: "language-select-label",
-                                        value: language,
-                                        onChange: (event) => setLanguage(event.target.value),
-                                        label: t('common.language'),
-                                        size: "small",
-                                        variant: "outlined",
-                                        sx: { 
-                                            fontSize: { xs: '0.9rem', md: '0.875rem' },
-                                            '& .MuiSelect-icon': {
-                                                fontSize: '1.2rem'
-                                            }
+                                    React.createElement(Typography, {
+                                        variant: "caption",
+                                        sx: {
+                                            fontSize: { xs: '0.75rem', md: '0.75rem' },
+                                            color: 'text.secondary'
                                         }
+                                    }, t('common.language')),
+                                    React.createElement(MaterialUI.FormControl, { 
+                                        sx: { 
+                                            minWidth: { xs: 90, md: 80 }
+                                        } 
                                     },
+                                        React.createElement(MaterialUI.Select, {
+                                            value: language,
+                                            onChange: (event) => setLanguage(event.target.value),
+                                            size: "small",
+                                            variant: "outlined",
+                                            sx: { 
+                                                fontSize: { xs: '0.8rem', md: '0.75rem' },
+                                                '& .MuiSelect-icon': {
+                                                    fontSize: '1rem'
+                                                },
+                                                '& .MuiSelect-select': {
+                                                    padding: { xs: '4px 24px 4px 8px', md: '4px 20px 4px 6px' }
+                                                }
+                                            }
+                                        },
                                         React.createElement(MaterialUI.MenuItem, { value: "ko", sx: { fontSize: '0.875rem' } }, 
                                             React.createElement(Box, { sx: { display: 'flex', alignItems: 'center', gap: 1 } },
                                                 React.createElement('img', { 
@@ -3778,6 +3777,36 @@
                                             )
                                         )
                                     )
+                                )
+                            ),
+                                // 테마 변경 버튼
+                                React.createElement(Box, {
+                                    sx: {
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }
+                                },
+                                    React.createElement(Typography, {
+                                        variant: "caption",
+                                        sx: {
+                                            fontSize: { xs: '0.75rem', md: '0.75rem' },
+                                            color: 'text.secondary'
+                                        }
+                                    }, t('common.theme')),
+                                    React.createElement(MaterialUI.IconButton, {
+                                        onClick: toggleTheme,
+                                        size: 'small',
+                                        title: `${t('common.currentTheme')}: ${theme === 'system' ? t('common.system') : theme === 'light' ? t('common.light') : t('common.dark')}`,
+                                        sx: {
+                                            color: 'text.primary',
+                                            '&:hover': {
+                                                color: 'primary.main',
+                                                backgroundColor: 'rgba(25, 118, 210, 0.08)'
+                                            }
+                                        }
+                                    }, getThemeIcon())
                                 )
                             ),
                             
