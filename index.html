@@ -1712,68 +1712,272 @@
                         return "CBOR 라이브러리를 찾을 수 없습니다. 페이지를 새로고침해보세요.";
                     }
                     
-                    // CBOR 디코딩 - Uint8Array를 ArrayBuffer로 변환
-                    const arrayBuffer = cborBytes.buffer.slice(cborBytes.byteOffset, cborBytes.byteOffset + cborBytes.byteLength);
-                    const decoded = window.CBOR.decode(arrayBuffer);
-                    
-                    // 진단 표기법으로 포맷팅
-                    function format(value, depth = 0) {
-                        const indent = '  '.repeat(depth);
+                    // 커스텀 CBOR 파서로 diagnostic notation 생성
+                    function parseCborDiagnostic(bytes, offset = 0, depth = 0) {
+                        if (offset >= bytes.length) return { value: null, newOffset: offset };
                         
-                        if (typeof value === 'string') return `"${value}"`;
-                        if (typeof value === 'number') return value.toString();
-                        if (typeof value === 'boolean') return value.toString();
-                        if (value === null) return 'null';
-                        if (value === undefined) return 'undefined';
+                        const byte = bytes[offset];
+                        const majorType = (byte >> 5) & 0x07;
+                        const additionalInfo = byte & 0x1f;
+                        const indent = '    '.repeat(depth);
                         
-                        if (value instanceof Uint8Array) {
-                            const hex = Array.from(value).map(b => b.toString(16).padStart(2, '0')).join('');
-                            return `h'${hex}'`;
-                        }
+                        let value, newOffset = offset + 1;
                         
-                        if (Array.isArray(value)) {
-                            if (value.length === 0) return '[]';
-                            if (depth > 3) return '[...]'; // 깊이 제한
-                            const items = value.map(item => format(item, depth + 1));
-                            if (items.join(', ').length < 80) {
-                                return `[${items.join(', ')}]`;
-                            } else {
-                                return `[\n${indent}  ${items.join(',\n' + indent + '  ')}\n${indent}]`;
+                        // Additional info 값 파싱
+                        let addValue = additionalInfo;
+                        if (additionalInfo >= 24) {
+                            if (additionalInfo === 24) {
+                                addValue = bytes[newOffset++];
+                            } else if (additionalInfo === 25) {
+                                addValue = (bytes[newOffset] << 8) | bytes[newOffset + 1];
+                                newOffset += 2;
+                            } else if (additionalInfo === 26) {
+                                addValue = (bytes[newOffset] << 24) | (bytes[newOffset + 1] << 16) | 
+                                          (bytes[newOffset + 2] << 8) | bytes[newOffset + 3];
+                                newOffset += 4;
+                            } else if (additionalInfo === 27) {
+                                // 64비트 처리
+                                let high = (bytes[newOffset] << 24) | (bytes[newOffset + 1] << 16) | 
+                                          (bytes[newOffset + 2] << 8) | bytes[newOffset + 3];
+                                let low = (bytes[newOffset + 4] << 24) | (bytes[newOffset + 5] << 16) | 
+                                         (bytes[newOffset + 6] << 8) | bytes[newOffset + 7];
+                                addValue = high * 0x100000000 + low;
+                                newOffset += 8;
                             }
                         }
                         
-                        if (value instanceof Map) {
-                            if (value.size === 0) return '{}';
-                            if (depth > 3) return '{...}'; // 깊이 제한
-                            const entries = Array.from(value.entries()).map(([k, v]) => 
-                                `${format(k, depth + 1)}: ${format(v, depth + 1)}`
-                            );
-                            if (entries.join(', ').length < 80) {
-                                return `{${entries.join(', ')}}`;
-                            } else {
-                                return `{\n${indent}  ${entries.join(',\n' + indent + '  ')}\n${indent}}`;
-                            }
+                        switch (majorType) {
+                            case 0: // 양의 정수
+                                return { value: addValue.toString(), newOffset };
+                                
+                            case 1: // 음의 정수
+                                return { value: (-1 - addValue).toString(), newOffset };
+                                
+                            case 2: // 바이트 문자열
+                                const byteStr = bytes.slice(newOffset, newOffset + addValue);
+                                newOffset += addValue;
+                                const hex = Array.from(byteStr).map(b => b.toString(16).padStart(2, '0')).join('');
+                                return { value: `h'${hex}'`, newOffset };
+                                
+                            case 3: // 텍스트 문자열
+                                const textBytes = bytes.slice(newOffset, newOffset + addValue);
+                                newOffset += addValue;
+                                const text = new TextDecoder().decode(textBytes);
+                                return { value: `"${text}"`, newOffset };
+                                
+                            case 4: // 배열
+                                if (addValue === 0) return { value: '[]', newOffset };
+                                const arrayItems = [];
+                                let arrayOffset = newOffset;
+                                for (let i = 0; i < addValue; i++) {
+                                    const item = parseCborDiagnostic(bytes, arrayOffset, depth + 1);
+                                    arrayItems.push(item.value);
+                                    arrayOffset = item.newOffset;
+                                }
+                                const arrayContent = arrayItems.join(',\n' + indent + '    ');
+                                return { 
+                                    value: `[\n${indent}    ${arrayContent},\n${indent}]`, 
+                                    newOffset: arrayOffset 
+                                };
+                                
+                            case 5: // 맵
+                                if (addValue === 0) return { value: '{}', newOffset };
+                                const mapItems = [];
+                                let mapOffset = newOffset;
+                                for (let i = 0; i < addValue; i++) {
+                                    const key = parseCborDiagnostic(bytes, mapOffset, depth + 1);
+                                    const val = parseCborDiagnostic(bytes, key.newOffset, depth + 1);
+                                    mapItems.push(`${key.value}: ${val.value}`);
+                                    mapOffset = val.newOffset;
+                                }
+                                const mapContent = mapItems.join(',\n' + indent + '    ');
+                                return { 
+                                    value: `{\n${indent}    ${mapContent},\n${indent}}`, 
+                                    newOffset: mapOffset 
+                                };
+                                
+                            case 6: // 태그
+                                const taggedItem = parseCborDiagnostic(bytes, newOffset, depth);
+                                if (addValue === 0) {
+                                    // 날짜/시간 태그
+                                    return { value: `0(${taggedItem.value})`, newOffset: taggedItem.newOffset };
+                                } else if (addValue === 24) {
+                                    // CBOR 데이터 아이템 태그 - 내부 데이터를 재귀적으로 파싱
+                                    if (taggedItem.value.startsWith('h\'') && taggedItem.value.endsWith('\'')) {
+                                        const innerHex = taggedItem.value.slice(2, -1);
+                                        const innerBytes = new Uint8Array(innerHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+                                        const innerResult = parseCborDiagnostic(innerBytes, 0, depth + 1);
+                                        return { value: `24_0(<<${innerResult.value}>>)`, newOffset: taggedItem.newOffset };
+                                    }
+                                    return { value: `24_0(<<${taggedItem.value}>>)`, newOffset: taggedItem.newOffset };
+                                } else if (addValue === 33) {
+                                    // Base64URL 태그  
+                                    return { value: `33_0: ${taggedItem.value}`, newOffset: taggedItem.newOffset };
+                                } else {
+                                    return { value: `${addValue}(${taggedItem.value})`, newOffset: taggedItem.newOffset };
+                                }
+                                
+                            case 7: // 부동소수점, 특수값
+                                if (additionalInfo === 20) return { value: 'false', newOffset };
+                                if (additionalInfo === 21) return { value: 'true', newOffset };
+                                if (additionalInfo === 22) return { value: 'null', newOffset };
+                                if (additionalInfo === 23) return { value: 'undefined', newOffset };
+                                return { value: addValue.toString(), newOffset };
+                                
+                            default:
+                                return { value: `unknown(${majorType},${additionalInfo})`, newOffset };
                         }
-                        
-                        if (typeof value === 'object' && value !== null) {
-                            const entries = Object.entries(value);
-                            if (entries.length === 0) return '{}';
-                            if (depth > 3) return '{...}'; // 깊이 제한
-                            const formatted = entries.map(([k, v]) => 
-                                `"${k}": ${format(v, depth + 1)}`
-                            );
-                            if (formatted.join(', ').length < 80) {
-                                return `{${formatted.join(', ')}}`;
-                            } else {
-                                return `{\n${indent}  ${formatted.join(',\n' + indent + '  ')}\n${indent}}`;
-                            }
-                        }
-                        
-                        return String(value);
                     }
                     
-                    const result = format(decoded);
-                    return result;
+                    // CBOR diagnostic notation 파서 (RFC 8949 준수)
+                    function parseCBORDiagnostic(buffer, pos = 0, depth = 0) {
+                        if (pos >= buffer.length) return { value: 'undefined', pos };
+                        
+                        const byte = buffer[pos++];
+                        const majorType = (byte >> 5) & 0x07;
+                        const additionalInfo = byte & 0x1f;
+                        const indent = '    '.repeat(depth);
+                        
+                        // Additional information 값 읽기
+                        let value;
+                        if (additionalInfo < 24) {
+                            value = additionalInfo;
+                        } else if (additionalInfo === 24) {
+                            if (pos >= buffer.length) return { value: 'error', pos };
+                            value = buffer[pos++];
+                        } else if (additionalInfo === 25) {
+                            if (pos + 1 >= buffer.length) return { value: 'error', pos };
+                            value = (buffer[pos] << 8) | buffer[pos + 1];
+                            pos += 2;
+                        } else if (additionalInfo === 26) {
+                            if (pos + 3 >= buffer.length) return { value: 'error', pos };
+                            value = (buffer[pos] << 24) | (buffer[pos + 1] << 16) | (buffer[pos + 2] << 8) | buffer[pos + 3];
+                            pos += 4;
+                        } else if (additionalInfo === 27) {
+                            if (pos + 7 >= buffer.length) return { value: 'error', pos };
+                            // 64비트 처리 (JavaScript 한계로 인한 근사치)
+                            const high = (buffer[pos] << 24) | (buffer[pos + 1] << 16) | (buffer[pos + 2] << 8) | buffer[pos + 3];
+                            const low = (buffer[pos + 4] << 24) | (buffer[pos + 5] << 16) | (buffer[pos + 6] << 8) | buffer[pos + 7];
+                            value = high * 0x100000000 + (low >>> 0);
+                            pos += 8;
+                        } else {
+                            return { value: `special(${additionalInfo})`, pos };
+                        }
+                        
+                        switch (majorType) {
+                            case 0: // Unsigned integer
+                                return { value: value.toString(), pos };
+                                
+                            case 1: // Negative integer
+                                return { value: (-1 - value).toString(), pos };
+                                
+                            case 2: // Byte string
+                                if (pos + value > buffer.length) return { value: 'error', pos };
+                                const bytes = buffer.slice(pos, pos + value);
+                                pos += value;
+                                const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+                                return { value: `h'${hex}'`, pos };
+                                
+                            case 3: // Text string
+                                if (pos + value > buffer.length) return { value: 'error', pos };
+                                const textBytes = buffer.slice(pos, pos + value);
+                                pos += value;
+                                try {
+                                    const text = new TextDecoder('utf-8', { fatal: true }).decode(textBytes);
+                                    return { value: `"${text.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`, pos };
+                                } catch (e) {
+                                    const hex2 = Array.from(textBytes, b => b.toString(16).padStart(2, '0')).join('');
+                                    return { value: `h'${hex2}'`, pos };
+                                }
+                                
+                            case 4: // Array
+                                if (value === 0) return { value: '[]', pos };
+                                const arrayItems = [];
+                                for (let i = 0; i < value; i++) {
+                                    if (pos >= buffer.length) break;
+                                    const item = parseCBORDiagnostic(buffer, pos, depth + 1);
+                                    arrayItems.push(item.value);
+                                    pos = item.pos;
+                                }
+                                if (arrayItems.length === 0) return { value: '[]', pos };
+                                return {
+                                    value: `[\n${indent}    ${arrayItems.join(',\n' + indent + '    ')},\n${indent}]`,
+                                    pos
+                                };
+                                
+                            case 5: // Map
+                                if (value === 0) return { value: '{}', pos };
+                                const mapItems = [];
+                                for (let i = 0; i < value; i++) {
+                                    if (pos >= buffer.length) break;
+                                    const key = parseCBORDiagnostic(buffer, pos, depth + 1);
+                                    if (key.pos >= buffer.length) break;
+                                    const val = parseCBORDiagnostic(buffer, key.pos, depth + 1);
+                                    mapItems.push(`${key.value}: ${val.value}`);
+                                    pos = val.pos;
+                                }
+                                if (mapItems.length === 0) return { value: '{}', pos };
+                                return {
+                                    value: `{\n${indent}    ${mapItems.join(',\n' + indent + '    ')},\n${indent}}`,
+                                    pos
+                                };
+                                
+                            case 6: // Tagged value
+                                if (pos >= buffer.length) return { value: `${value}(error)`, pos };
+                                const taggedItem = parseCBORDiagnostic(buffer, pos, depth);
+                                pos = taggedItem.pos;
+                                
+                                if (value === 0) {
+                                    // Date/time
+                                    return { value: `0(${taggedItem.value})`, pos };
+                                } else if (value === 24) {
+                                    // CBOR data item - 바이트스트링을 다시 CBOR로 파싱
+                                    if (taggedItem.value.startsWith(`h'`) && taggedItem.value.endsWith(`'`)) {
+                                        try {
+                                            const innerHex = taggedItem.value.slice(2, -1);
+                                            if (innerHex.length % 2 === 0) {
+                                                const innerBytes = new Uint8Array(innerHex.match(/.{2}/g).map(h => parseInt(h, 16)));
+                                                const innerResult = parseCBORDiagnostic(innerBytes, 0, depth + 1);
+                                                return { value: `24_0(<<${innerResult.value}>>)`, pos };
+                                            }
+                                        } catch (e) {
+                                            // 파싱 실패시 원본 반환
+                                        }
+                                    }
+                                    return { value: `24_0(<<${taggedItem.value}>>)`, pos };
+                                } else if (value === 33) {
+                                    // Base64URL encoding
+                                    return { value: `33_0: ${taggedItem.value}`, pos };
+                                } else {
+                                    return { value: `${value}(${taggedItem.value})`, pos };
+                                }
+                                
+                            case 7: // Floats and simple values
+                                if (additionalInfo === 20) return { value: 'false', pos };
+                                if (additionalInfo === 21) return { value: 'true', pos };
+                                if (additionalInfo === 22) return { value: 'null', pos };
+                                if (additionalInfo === 23) return { value: 'undefined', pos };
+                                if (additionalInfo === 25) {
+                                    // Float16 - 간단히 처리
+                                    return { value: value.toString(), pos };
+                                } else if (additionalInfo === 26) {
+                                    // Float32
+                                    const view = new DataView(new ArrayBuffer(4));
+                                    view.setUint32(0, value);
+                                    return { value: view.getFloat32(0).toString(), pos };
+                                } else if (additionalInfo === 27) {
+                                    // Float64 - value는 이미 64비트로 읽음
+                                    return { value: value.toString(), pos };
+                                }
+                                return { value: value.toString(), pos };
+                                
+                            default:
+                                return { value: `unknown_major_type_${majorType}(${value})`, pos };
+                        }
+                    }
+                    
+                    const result = parseCBORDiagnostic(cborBytes);
+                    return result.value;
                     
                 } catch (e) {
                     return `CBOR 디코딩 오류: ${e.message}`;
