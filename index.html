@@ -1132,6 +1132,11 @@
                             return { matched: false };
                         }
 
+                        // h'...' 형식은 Hex 코덱이 처리하도록 제외
+                        if (/^h'[0-9a-fA-F]+'$/.test(s.replace(/\s/g, ''))) {
+                            return { matched: false };
+                        }
+
                         // 1. 먼저 CBOR 구조적 특성 검사
                         if (isCBORData(s)) {
                             // CBOR 데이터로 확인된 경우 바로 디코딩 시도
@@ -1232,10 +1237,13 @@
                         if (/^h'([0-9a-fA-F]+)'$/.test(compact)) {
                             // h'값' 형식에서 hex 값 추출
                             hex = compact.match(/^h'([0-9a-fA-F]+)'$/)[1];
+                            console.log(`Hex codec: Detected h'...' format, extracted hex: ${hex}`);
                         } else if (/^(0x)?([0-9a-fA-F]{2})+$/.test(compact)) {
                             // 기본 hex 형식
                             hex = compact.replace(/^0x/, '');
+                            console.log(`Hex codec: Detected basic hex format, extracted hex: ${hex}`);
                         } else {
+                            console.log(`Hex codec: No match for input: ${compact}`);
                             return { matched: false };
                         }
                         
@@ -1256,7 +1264,37 @@
                             binaryStr += String.fromCharCode(bytes[i]);
                         }
                         
-                        // 항상 바이너리 데이터로 처리
+                        // CBOR 데이터인지 확인하고 디코딩 시도
+                        if (typeof window.CBOR !== 'undefined' && window.CBOR.decode && isCBORData(binaryStr)) {
+                            console.log(`Hex codec: Detected CBOR data, attempting to decode...`);
+                            try {
+                                const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+                                const value = window.CBOR.decode(arrayBuffer);
+                                console.log(`Hex codec: CBOR decode successful:`, value);
+                                
+                                let cborResult;
+                                if (typeof value === 'string') {
+                                    cborResult = value;
+                                } else if (value instanceof Uint8Array) {
+                                    cborResult = uint8ToBinString(value);
+                                } else {
+                                    try {
+                                        cborResult = JSON.stringify(value, null, 2);
+                                    } catch {
+                                        cborResult = String(value);
+                                    }
+                                }
+                                console.log(`Hex codec: Returning CBOR result: ${cborResult}`);
+                                return finalize(cborResult, 'Hex-CBOR', input, false);
+                            } catch (e) {
+                                console.log(`Hex codec: CBOR decode failed:`, e);
+                                // CBOR 디코딩 실패시 일반 바이너리로 처리
+                            }
+                        } else {
+                            console.log(`Hex codec: Not CBOR data or CBOR library not available`);
+                        }
+                        
+                        // 일반 바이너리 데이터로 처리
                         return finalize(binaryStr, this.label, input, true); // isBinary = true
                     } catch (error) {
                         return { matched: false };
