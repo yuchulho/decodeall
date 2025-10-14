@@ -1376,37 +1376,7 @@
                             binaryStr += String.fromCharCode(bytes[i]);
                         }
                         
-                        // CBOR 데이터인지 확인하고 디코딩 시도
-                        if (typeof window.CBOR !== 'undefined' && window.CBOR.decode && isCBORData(binaryStr)) {
-                            console.log(`Hex codec: Detected CBOR data, attempting to decode...`);
-                            try {
-                                const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-                                const value = window.CBOR.decode(arrayBuffer);
-                                console.log(`Hex codec: CBOR decode successful:`, value);
-                                
-                                let cborResult;
-                                if (typeof value === 'string') {
-                                    cborResult = value;
-                                } else if (value instanceof Uint8Array) {
-                                    cborResult = uint8ToBinString(value);
-                                } else {
-                                    try {
-                                        cborResult = JSON.stringify(value, null, 2);
-                                    } catch {
-                                        cborResult = String(value);
-                                    }
-                                }
-                                console.log(`Hex codec: Returning CBOR result: ${cborResult}`);
-                                return finalize(cborResult, 'Hex-CBOR', input, false);
-                            } catch (e) {
-                                console.log(`Hex codec: CBOR decode failed:`, e);
-                                // CBOR 디코딩 실패시 일반 바이너리로 처리
-                            }
-                        } else {
-                            console.log(`Hex codec: Not CBOR data or CBOR library not available`);
-                        }
-                        
-                        // 일반 바이너리 데이터로 처리
+                        // 항상 바이너리 데이터로 처리
                         return finalize(binaryStr, this.label, input, true); // isBinary = true
                     } catch (error) {
                         return { matched: false };
@@ -1455,13 +1425,28 @@
                 },
                 encode(input) {
                     try {
-                        // UTF-8 바이트로 변환 후 Base64 인코딩
-                        const utf8Bytes = new TextEncoder().encode(input);
-                        const binaryString = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
-                        return btoa(binaryString);
+                        // 입력이 바이너리 문자열인지 확인
+                        if (isBinaryString(input, 0.05)) {
+                            // 이미 바이너리 문자열인 경우 직접 Base64로 인코딩
+                            return btoa(input);
+                        } else {
+                            // 일반 텍스트인 경우 UTF-8 바이트로 변환 후 Base64 인코딩
+                            const utf8Bytes = new TextEncoder().encode(input);
+                            const binaryString = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                            return btoa(binaryString);
+                        }
                     } catch {
                         // Fallback
-                        return btoa(unescape(encodeURIComponent(input)));
+                        try {
+                            return btoa(unescape(encodeURIComponent(input)));
+                        } catch {
+                            // 최종 fallback: 각 문자의 charCode를 직접 사용
+                            let binaryStr = '';
+                            for (let i = 0; i < input.length; i++) {
+                                binaryStr += String.fromCharCode(input.charCodeAt(i) & 0xFF);
+                            }
+                            return btoa(binaryStr);
+                        }
                     }
                 }
             };
@@ -1484,11 +1469,31 @@
                 },
                 encode(input) {
                     try {
-                        let b64 = btoa(input);
+                        let b64;
+                        // 입력이 바이너리 문자열인지 확인
+                        if (isBinaryString(input, 0.05)) {
+                            // 이미 바이너리 문자열인 경우 직접 Base64로 인코딩
+                            b64 = btoa(input);
+                        } else {
+                            // 일반 텍스트인 경우 UTF-8 바이트로 변환 후 Base64 인코딩
+                            const utf8Bytes = new TextEncoder().encode(input);
+                            const binaryString = Array.from(utf8Bytes).map(b => String.fromCharCode(b)).join('');
+                            b64 = btoa(binaryString);
+                        }
                         return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
                     } catch {
-                        let b64 = btoa(unescape(encodeURIComponent(input)));
-                        return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                        try {
+                            let b64 = btoa(unescape(encodeURIComponent(input)));
+                            return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                        } catch {
+                            // 최종 fallback
+                            let binaryStr = '';
+                            for (let i = 0; i < input.length; i++) {
+                                binaryStr += String.fromCharCode(input.charCodeAt(i) & 0xFF);
+                            }
+                            let b64 = btoa(binaryStr);
+                            return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                        }
                     }
                 }
             };
