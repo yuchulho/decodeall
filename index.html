@@ -1399,25 +1399,42 @@
                 description: "Base64는 8비트 바이너리 데이터를 64개의 안전한 ASCII 문자(A-Z, a-z, 0-9, +, /)로 인코딩하는 방식입니다. 이메일 첨부파일, 웹의 데이터 URL(data:image/png;base64,...), JSON Web Token, API 통신 등에서 광범위하게 사용됩니다. 3바이트를 4문자로 변환하므로 약 33% 크기가 증가합니다.",
                 detect(input) {
                     try {
+                        const raw = (input || '').trim();
+                        if (!raw) return { matched: false };
+
+                        // data:*;base64,.... 형태 지원
+                        let base64Part = raw;
+                        const dataUrlMatch = raw.match(/^data:[^;]+;base64,([\s\S]+)$/i);
+                        if (dataUrlMatch && dataUrlMatch[1]) {
+                            base64Part = dataUrlMatch[1];
+                        }
+
                         if (
-                            /^[A-Za-z0-9+/=\s]+$/.test(input || '') &&
-                            (input || '').length >= 8 &&
-                            (input || '').replace(/\s/g, '').length % 4 === 0
+                            /^[A-Za-z0-9+/=\s]+$/.test(base64Part) &&
+                            base64Part.length >= 8 &&
+                            base64Part.replace(/\s/g, '').length % 4 === 0
                         ) {
-                            const base64Clean = (input || '').replace(/\s/g, '');
-                            // Base64를 바이트 배열로 디코딩
+                            const base64Clean = base64Part.replace(/\s/g, '');
                             const binaryString = atob(base64Clean);
-                            const bytes = new Uint8Array(binaryString.length);
-                            for (let i = 0; i < binaryString.length; i++) {
-                                bytes[i] = binaryString.charCodeAt(i);
+
+                            // 바이너리 시그니처(예: PNG/JPEG/PDF/ZIP 등)면 텍스트 디코딩 시도하지 않고 그대로 보존
+                            const detectedFormat = detectBinaryFormat(binaryString);
+                            if (detectedFormat) {
+                                return finalize(binaryString, this.label, input, true);
                             }
-                            // UTF-8로 디코딩 시도
+
+                            // 통계적으로 바이너리로 보이면 그대로 보존
+                            if (isBinaryString(binaryString, 0.05)) {
+                                return finalize(binaryString, this.label, input, true);
+                            }
+
+                            // UTF-8 텍스트인 경우에만 텍스트로 반환 (fatal=true로 바이트 손실 방지)
                             try {
-                                const str = new TextDecoder('utf-8').decode(bytes);
+                                const bytes = binStringToUint8(binaryString);
+                                const str = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
                                 return finalize(str, this.label, input);
                             } catch {
-                                // UTF-8 디코딩 실패시 바이너리 문자열로 처리
-                                return finalize(binaryString, this.label, input);
+                                return finalize(binaryString, this.label, input, true);
                             }
                         }
                     } catch {}
@@ -1461,8 +1478,24 @@
                         if (/^[A-Za-z0-9_\-=]+$/.test(s) && s.length >= 8 && (s.includes('-') || s.includes('_'))) {
                             let b64 = s.replace(/-/g, '+').replace(/_/g, '/');
                             while (b64.length % 4 !== 0) b64 += '=';
-                            const out = atob(b64);
-                            return finalize(out, this.label, input);
+                            const binaryString = atob(b64);
+
+                            const detectedFormat = detectBinaryFormat(binaryString);
+                            if (detectedFormat) {
+                                return finalize(binaryString, this.label, input, true);
+                            }
+
+                            if (isBinaryString(binaryString, 0.05)) {
+                                return finalize(binaryString, this.label, input, true);
+                            }
+
+                            try {
+                                const bytes = binStringToUint8(binaryString);
+                                const str = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+                                return finalize(str, this.label, input);
+                            } catch {
+                                return finalize(binaryString, this.label, input, true);
+                            }
                         }
                     } catch {}
                     return { matched: false };
