@@ -28,6 +28,8 @@ Whether you're analyzing encoded data or generating encoded output, this tool of
    - Enter plain text in the right input field.
    - Choose an encoding algorithm (e.g., Base64).
    - The encoded result will appear in the left input field.
+  
+ 4. https://yuchulho.github.io/decodeall/ 
 
 ---
 
